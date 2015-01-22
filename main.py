@@ -37,16 +37,11 @@ import app_config
 from google.appengine.ext import db
 from webapp2_extras import sessions
 
-#FACEBOOK_APP_ID = "997456320282204"
-#FACEBOOK_APP_SECRET = "92ee7ac86d2530d867143a71a6ff3f59"
-
 FACEBOOK_APP_ID = app_config.FACEBOOK_APP_ID
 FACEBOOK_APP_SECRET = app_config.FACEBOOK_APP_SECRET
 
 config = {}
 config['webapp2_extras.sessions'] = app_config.CONFIG
-
-#config['webapp2_extras.sessions'] = {'secret_key':'somestring'}
 
 class BaseHandler(webapp2.RequestHandler):
     """Provides access to the active Facebook user in self.current_user
