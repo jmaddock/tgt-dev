@@ -37,11 +37,16 @@ import app_config
 from google.appengine.ext import db
 from webapp2_extras import sessions
 
+#FACEBOOK_APP_ID = "997456320282204"
+#FACEBOOK_APP_SECRET = "92ee7ac86d2530d867143a71a6ff3f59"
+
 FACEBOOK_APP_ID = app_config.FACEBOOK_APP_ID
 FACEBOOK_APP_SECRET = app_config.FACEBOOK_APP_SECRET
 
 config = {}
 config['webapp2_extras.sessions'] = app_config.CONFIG
+
+#config['webapp2_extras.sessions'] = {'secret_key':'somestring'}
 
 class BaseHandler(webapp2.RequestHandler):
     """Provides access to the active Facebook user in self.current_user
@@ -62,6 +67,7 @@ class BaseHandler(webapp2.RequestHandler):
                                                    FACEBOOK_APP_ID,
                                                    FACEBOOK_APP_SECRET)
             if cookie:
+                print cookie
                 # Okay so user logged in.
                 # Now, check to see if existing user
                 user = models.User.get_by_key_name(cookie["uid"])
@@ -86,8 +92,10 @@ class BaseHandler(webapp2.RequestHandler):
                     'name':user.name,
                     'profile_url':user.profile_url,
                     'id':user.id,
-                    'access_token':user.access_token
+                    'access_token':user.access_token,
+                    'public_user':user.public_user
                 }
+                print self.session.get("user")
                 return self.session.get("user")
         return None
 
@@ -117,12 +125,10 @@ class HomeHandler(BaseHandler):
         current_user = self.current_user
         if current_user:
             view = self.request.get('view')
-            template = jinja_environment.get_template('example.html')
+            template = jinja_environment.get_template('index.html')
             posts = models.GoodThing.all().order('-created')
-            print posts
             if view == 'me':
                 user = models.User.get_by_key_name(current_user['id'])
-                print user
                 posts.filter('user =',user)
             template_values = {
                 'facebook_app_id':FACEBOOK_APP_ID,
@@ -146,15 +152,24 @@ class PostHandler(BaseHandler):
         reason = self.request.get('reason')
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
-
-        #graph = facebook.GraphAPI(self.current_user['access_token'])
-        #response = graph.put_photo(file, "Test Image")
+        if user.public_user:
+            if self.request.get('wall') == 'on':
+                wall = True
+            if self.request.get('public') == 'on':
+                public = True
+            if wall:
+                graph = facebook.GraphAPI(self.current_user['access_token'])
+                graph.put_object('me','feed',message=good_thing)
         #photo_url = ("http://www.facebook.com/"
         #             "photo.php?fbid={0}".format(response['id']))
+        else:
+            public = False
+            wall = False
         good_thing = models.GoodThing(
             good_thing=good_thing,
             reason=reason,
-            user=user
+            user=user,
+            public=public
         )
         good_thing.put()
         self.redirect('/')
@@ -203,6 +218,12 @@ class IntroHandler(BaseHandler):
         template_values = {}
         self.response.out.write(template.render(template_values))
 
+class PrivacyHandler(webapp2.RequestHandler):
+    def get(self):
+        template = jinja_environment.get_template('privacy.html')
+        template_values = {}
+        self.response.out.write(template.render(template_values))
+
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__))
 )
@@ -213,7 +234,8 @@ app = webapp2.WSGIApplication(
      ('/post', PostHandler),
      ('/cheer', CheerHandler),
      ('/comment', CommentHandler),
-     ('/intro', IntroHandler),],
+     ('/intro', IntroHandler),
+     ('/privacy', PrivacyHandler),],
     debug=True,
     config=config
 )

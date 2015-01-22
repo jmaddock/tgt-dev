@@ -7,7 +7,7 @@ class User(db.Model):
     name = db.StringProperty(required=True)
     profile_url = db.StringProperty(required=True)
     access_token = db.StringProperty(required=True)
-    public_user = db.BooleanProperty(default=False)
+    public_user = db.BooleanProperty(default=True) # change default back to false
 
 class GoodThing(db.Model):
     good_thing = db.StringProperty(required=True)
@@ -15,8 +15,8 @@ class GoodThing(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
     user = db.ReferenceProperty(User,required=True)
     #mentions = db.StringListProperty()
-    #public = db.BooleanProperty()
-    #wall = db.BooleanField(default=False,help_text="Post to Facebook NewsFeed")
+    public = db.BooleanProperty(default=True)
+    wall = db.BooleanProperty(default=False)
     #fbid = models.CharField(max_length=100,blank=True,default=None,editable=False)
     deleted = db.BooleanProperty(default=False)
     cheers = db.IntegerProperty(default=0)
@@ -35,6 +35,6 @@ class Comment(db.Model):
 
 class Settings(db.Model):
     user = db.ReferenceProperty(User,required=True)
-    reminderDays = db.IntegerProperty(default=0)
-    #defaultFB = models.BooleanField(default=False)
-    #defaultPublic = models.BooleanField(default=True)
+    reminder_days = db.IntegerProperty(default=0)
+    default_FB = db.BooleanProperty(default=False)
+    default_Public = db.BooleanProperty(default=False)
