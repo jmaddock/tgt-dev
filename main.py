@@ -147,6 +147,11 @@ class PostHandler(BaseHandler):
         reason = self.request.get('reason')
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
+        raw_img = self.request.get('img')
+        if raw_img != '':
+            img = db.Blob(raw_img)
+        else:
+            img = None
         if user.public_user:
             if self.request.get('wall') == 'on':
                 wall = True
@@ -154,9 +159,10 @@ class PostHandler(BaseHandler):
                 public = True
             if wall:
                 graph = facebook.GraphAPI(self.current_user['access_token'])
-                graph.put_object('me','feed',message=good_thing)
-        #photo_url = ("http://www.facebook.com/"
-        #             "photo.php?fbid={0}".format(response['id']))
+                if img:
+                    graph.put_photo(image=raw_img,message=good_thing)
+                else:
+                    graph.put_object('me','feed',message=good_thing)
         else:
             public = False
             wall = False
@@ -164,7 +170,8 @@ class PostHandler(BaseHandler):
             good_thing=good_thing,
             reason=reason,
             user=user,
-            public=public
+            public=public,
+            img=img
         )
         good_thing.put()
         self.redirect('/')
@@ -213,6 +220,23 @@ class IntroHandler(BaseHandler):
         template_values = {}
         self.response.out.write(template.render(template_values))
 
+class SettingsHandler(BaseHandler):
+    def post(self):
+        user_id = str(self.current_user['id'])
+        user = models.User.get_by_key_name(user_id)
+        reminder_days = self.request.get('reminder_days')
+        if self.request.get('default_fb') == 'on':
+            default_fb = True
+        if self.request.get('default_public') == 'on':
+            default_public = True
+        settings = models.Settings(
+            user=user,
+            reminder_days=reminder_days
+            default_fb=default_fb
+            default_public=default_public
+        )
+        settings.put()
+
 class PrivacyHandler(webapp2.RequestHandler):
     def get(self):
         template = jinja_environment.get_template('privacy.html')
@@ -224,13 +248,14 @@ jinja_environment = jinja2.Environment(
 )
 
 app = webapp2.WSGIApplication(
-    [('/', HomeHandler),
+    [('/*', HomeHandler),
      ('/logout', LogoutHandler),
      ('/post', PostHandler),
      ('/cheer', CheerHandler),
      ('/comment', CommentHandler),
      ('/intro', IntroHandler),
-     ('/privacy', PrivacyHandler),],
+     ('/privacy', PrivacyHandler),
+     ('/settings', SettingsHandler)],
     debug=True,
     config=config
 )

@@ -36,5 +36,5 @@ class Comment(db.Model):
 class Settings(db.Model):
     user = db.ReferenceProperty(User,required=True)
     reminder_days = db.IntegerProperty(default=0)
-    default_FB = db.BooleanProperty(default=False)
-    default_Public = db.BooleanProperty(default=False)
+    default_fb = db.BooleanProperty(default=False)
+    default_public = db.BooleanProperty(default=False)

@@ -19,9 +19,10 @@
 		   <form method="post" action='/post'>
 		   Good Thing: <input type="text" name="good_thing"/>
                    Reason: <input type="text" name="reason"/>
+                   Img: <input type="file" name="img" multiple/></div>
                        {% if current_user.public_user %}
-                   Public: <input type='checkbox' name='public'/>
-                   Wall: <input type='checkbox' name='wall'/>
+                           Public: <input type='checkbox' name='public'/>
+                           Wall: <input type='checkbox' name='wall'/>
                        {% endif %}
 		       <input type="submit"/>
 		   </form>
