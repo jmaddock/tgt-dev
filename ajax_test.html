@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+</head>
+<body>
+    <div id='test'>
+        <button>test button</button>
+        <p>this is some test text</p>
+    </div>
+    <div>
+        <form id='settings' action='/ajax_test'>
+                    Reminder Days: <input type='number' name='reminder_days'/>
+                    Default Post to FB <input type='checkbox' name='default_fb'/>
+                    Default Public <input type='checkbox' name='default_public'/>
+                    <input type="submit"/>
+        </form>
+    </div>
+    <script>
+     $( "#settings" ).submit(function( event ) {$.post( "/ajax_response",$( "#settings" ).serialize())});
+    </script>
+    <script>
+        function getData() {
+    $.ajax({
+             url: "/ajax_test",
+             type: "post",
+             dataType: "json"
+         }).success(function(data){
+             $('#test').append(JSON.stringify(data.data));
+         });
+
+         return false;
+     }
+
+        $('button').click(getData);
+    </script>
+</body>

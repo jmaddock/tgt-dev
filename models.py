@@ -1,5 +1,10 @@
 from google.appengine.ext import db
 
+class Settings(db.Model):
+    reminder_days = db.IntegerProperty(default=0)
+    default_fb = db.BooleanProperty(default=False)
+    default_public = db.BooleanProperty(default=False)
+
 class User(db.Model):
     id = db.StringProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
@@ -8,6 +13,7 @@ class User(db.Model):
     profile_url = db.StringProperty(required=True)
     access_token = db.StringProperty(required=True)
     public_user = db.BooleanProperty(default=True) # change default back to false
+    settings = db.ReferenceProperty(Settings,required=True)
 
 class GoodThing(db.Model):
     good_thing = db.StringProperty(required=True)
@@ -32,9 +38,3 @@ class Comment(db.Model):
     user = db.ReferenceProperty(User,required=True)
     good_thing = db.ReferenceProperty(GoodThing,required=True)
     created = db.DateTimeProperty(auto_now_add=True)
-
-class Settings(db.Model):
-    user = db.ReferenceProperty(User,required=True)
-    reminder_days = db.IntegerProperty(default=0)
-    default_fb = db.BooleanProperty(default=False)
-    default_public = db.BooleanProperty(default=False)

@@ -33,6 +33,7 @@ import jinja2
 import urllib2
 import models
 import app_config
+import json
 
 from google.appengine.ext import db
 from webapp2_extras import sessions
@@ -70,12 +71,15 @@ class BaseHandler(webapp2.RequestHandler):
                     # Not an existing user so get user info
                     graph = facebook.GraphAPI(cookie["access_token"])
                     profile = graph.get_object("me")
+                    settings = models.Settings()
+                    settings.put()
                     user = models.User(
                         key_name=str(profile["id"]),
                         id=str(profile["id"]),
                         name=profile["name"],
                         profile_url=profile["link"],
-                        access_token=cookie["access_token"]
+                        access_token=cookie["access_token"],
+                        settings=settings
                     )
                     user.put()
                     self.redirect('/intro')
@@ -155,8 +159,12 @@ class PostHandler(BaseHandler):
         if user.public_user:
             if self.request.get('wall') == 'on':
                 wall = True
+            else:
+                wall = False
             if self.request.get('public') == 'on':
                 public = True
+            else:
+                public = False
             if wall:
                 graph = facebook.GraphAPI(self.current_user['access_token'])
                 if img:
@@ -224,17 +232,19 @@ class SettingsHandler(BaseHandler):
     def post(self):
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
+        settings = user.settings
         reminder_days = self.request.get('reminder_days')
+        if reminder_days != '':
+            settings.reminder_days = reminder_days
         if self.request.get('default_fb') == 'on':
-            default_fb = True
+            settings.default_fb = True
+        else:
+            settings.default_fb = False
         if self.request.get('default_public') == 'on':
-            default_public = True
-        settings = models.Settings(
-            user=user,
-            reminder_days=reminder_days
-            default_fb=default_fb
-            default_public=default_public
-        )
+            settings.default_public = True
+        else:
+            settings.default_public = False
+        print settings.default_fb
         settings.put()
 
 class PrivacyHandler(webapp2.RequestHandler):
@@ -242,6 +252,22 @@ class PrivacyHandler(webapp2.RequestHandler):
         template = jinja_environment.get_template('privacy.html')
         template_values = {}
         self.response.out.write(template.render(template_values))
+
+class AjaxTest(webapp2.RequestHandler):
+    def get(self):
+        template = jinja_environment.get_template('ajax_test.html')
+        template_values = {}
+        self.response.out.write(template.render(template_values))
+
+class AjaxResponse(webapp2.RequestHandler):
+    def post(self):
+        self.response.headers['Content-Type'] = 'application/json'
+        json_data = {'text':'test test',
+                     'data':2}
+        self.response.out.write(json.dumps(json_data))
+        if self.request.get('default_fb') == 'on':
+            print 'true'
+        print type(self.request.get('default_fb'))
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__))
@@ -255,7 +281,9 @@ app = webapp2.WSGIApplication(
      ('/comment', CommentHandler),
      ('/intro', IntroHandler),
      ('/privacy', PrivacyHandler),
-     ('/settings', SettingsHandler)],
+     ('/settings', SettingsHandler),
+     ('/ajax_test', AjaxTest),
+     ('/ajax_response', AjaxResponse)],
     debug=True,
     config=config
 )
