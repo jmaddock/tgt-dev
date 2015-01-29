@@ -182,7 +182,8 @@ class PostHandler(BaseHandler):
             img=img
         )
         good_thing.put()
-        self.redirect('/')
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(good_thing.template()))
 
 class CheerHandler(BaseHandler):
     def post(self):
@@ -212,8 +213,8 @@ class CommentHandler(BaseHandler):
             good_thing=good_thing,
         )
         comment.put()
-        print good_thing.comment_set
-        self.redirect('/')
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(comment.template()))
 
 class LogoutHandler(BaseHandler):
     def get(self):

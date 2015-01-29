@@ -28,6 +28,16 @@ class GoodThing(db.Model):
     cheers = db.IntegerProperty(default=0)
     img = db.BlobProperty()
 
+    def template(self):
+        template = {'id':self.key().id(),
+                    'good_thing':self.good_thing,
+                    'reason':self.reason,
+                    'user':self.user.id,
+                    'cheers':self.cheers,
+                    #add img
+        }
+        return template
+
 class Cheer(db.Model):
     user = db.ReferenceProperty(User,required=True)
     good_thing = db.ReferenceProperty(GoodThing,required=True)
@@ -38,3 +48,7 @@ class Comment(db.Model):
     user = db.ReferenceProperty(User,required=True)
     good_thing = db.ReferenceProperty(GoodThing,required=True)
     created = db.DateTimeProperty(auto_now_add=True)
+
+    def template(self):
+        template = {'comment_text':self.comment_text,}
+        return template
