@@ -147,6 +147,18 @@ class HomeHandler(BaseHandler):
 
 class PostHandler(BaseHandler):
     def post(self):
+        if self.request.get('view') != '':
+            good_things = models.GoodThing.all().order('created')
+            if self.request.get('view') == 'me':
+                user = models.User.get_by_key_name(current_user['id'])
+                good_things.filter('user =',user)
+            result = [x.template() for x in good_things]
+        else:
+            result = [self.save_post().template()]
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(result))
+
+    def save_post(self):
         good_thing = self.request.get('good_thing')
         reason = self.request.get('reason')
         user_id = str(self.current_user['id'])
@@ -182,8 +194,7 @@ class PostHandler(BaseHandler):
             img=img
         )
         good_thing.put()
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.out.write(json.dumps(good_thing.template()))
+        return good_thing
 
 class CheerHandler(BaseHandler):
     def post(self):

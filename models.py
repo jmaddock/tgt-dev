@@ -42,14 +42,16 @@ class GoodThing(db.Model):
         return template
 
     def get_cheers(self):
-        cheers = self.cheer_set.fetch()
-        result = [x.user.id for x in cheers]
+        cheers = self.cheer_set.fetch(limit=None)
+        if cheers:
+            result = [x.user.id for x in cheers]
+        else:
+            result = None
         return result
 
     #maybe delete
     def num_cheers(self):
-        cheers = self.cheer_set.fetch()
-        return len(cheers)
+        return self.cheer_set.count()
 
 class Cheer(db.Model):
     user = db.ReferenceProperty(User,required=True)

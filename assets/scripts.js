@@ -11,15 +11,13 @@ $( document ).ready(function() {
 // clear form on success
 $( document ).ready(function() {
     $( "#post" ).submit(function( event ) {
-        $.post( "/post",$( "#post" ).serialize())
+        var data_in = $( "#post" ).serialize() + '&view=';
+        $.post( "/post",data_in)
             .done(function(data){
                 $( '#post' ).each(function(){
                     this.reset();
                 });
-                // fix this to append 'good_thing' template
-                $('body').append($('<p>', {
-                    text: data.good_thing
-                }));
+                get_posts(data);
             });
         return false;
     });
@@ -49,3 +47,25 @@ $( document ).ready(function() {
         return false;
     });
 });
+
+// get all posts on page load
+window.onload = function() {
+    $( document ).ready(function() {
+        var view = 'view=all';
+        $.post( "/post",view).done(function(data){
+            get_posts(data);
+        });
+    });
+};
+
+// render posts from template and json data
+function get_posts(post_list) {
+    $.get('templates/good_thing_tpl.html', function(templates) {
+        post_list.forEach(function(data) {
+            // Fetch the <script /> block from the loaded external
+            // template file which contains our greetings template.
+            var template = $(templates).filter('#good_thing_tpl').html();
+            $('ul#good_things').prepend(Mustache.render(template, data));
+        });
+    });
+}

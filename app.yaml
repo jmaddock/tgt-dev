@@ -8,6 +8,9 @@ handlers:
 - url: /assets
   static_dir: assets
 
+- url: /templates
+  static_dir: templates
+
 - url: /.*
   script: main.app
 
