@@ -25,18 +25,31 @@ class GoodThing(db.Model):
     wall = db.BooleanProperty(default=False)
     #fbid = models.CharField(max_length=100,blank=True,default=None,editable=False)
     deleted = db.BooleanProperty(default=False)
-    cheers = db.IntegerProperty(default=0)
+    #cheers = db.IntegerProperty(default=0)
     img = db.BlobProperty()
 
     def template(self):
-        template = {'id':self.key().id(),
-                    'good_thing':self.good_thing,
-                    'reason':self.reason,
-                    'user':self.user.id,
-                    'cheers':self.cheers,
-                    #add img
+        template = {
+            'id':self.key().id(),
+            'good_thing':self.good_thing,
+            'reason':self.reason,
+            'user_id':self.user.id,
+            'user_name':self.user.name,
+            'get_cheers':self.get_cheers(),
+            'num_cheers':self.num_cheers(),
+            #add img
         }
         return template
+
+    def get_cheers(self):
+        cheers = self.cheer_set.fetch()
+        result = [x.user.id for x in cheers]
+        return result
+
+    #maybe delete
+    def num_cheers(self):
+        cheers = self.cheer_set.fetch()
+        return len(cheers)
 
 class Cheer(db.Model):
     user = db.ReferenceProperty(User,required=True)
@@ -50,5 +63,8 @@ class Comment(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
 
     def template(self):
-        template = {'comment_text':self.comment_text,}
+        template = {
+            'comment_text':self.comment_text,
+            'user':self.user.id
+        }
         return template

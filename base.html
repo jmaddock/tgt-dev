@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+{% autoescape true %}
+<head>
+    <title>3GT DEV</title>
+    <link type="text/css" rel="stylesheet" href="/assets/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="/assets/portfolio.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src='assets/scripts.js'></script>
+    <script src='assets/moustache.js'></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+    <div class="navbar navbar-static-top">
+	<div class="container">
+	    <div class="row">
+		<div class="span12">
+		    <a class="brand tall" href="/"><h3>3GT DEV</h3></a>
+                </div>
+	    </div>
+	</div>
+    </div>
+    <hr style="margin-top:0px;">
+    <div class = "container">
+	<div class="row">
+	    <div class="span12">
+                <div class="row">
+            {% block body %}
+            {% endblock  %}
+            {% block settings %}
+            {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="navbar navbar-fixed-bottom footer">
+	<hr class="footer">
+	<div class="container" style="width:940px">
+	    <div class="row">
+		<div class="span12">
+		    <h6 style="text-align:center">Jim Maddock | <a href='/privacy'>privacy</a><a href='</h6>
+		</div>
+	    </div>
+	</div>
+    </div>
+</body>
+{% endautoescape %}

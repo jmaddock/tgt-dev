@@ -271,7 +271,9 @@ class AjaxResponse(webapp2.RequestHandler):
         print type(self.request.get('default_fb'))
 
 jinja_environment = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.dirname(__file__))
+    loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
+    autoescape=True,
+    extensions=['jinja2.ext.autoescape'],
 )
 
 app = webapp2.WSGIApplication(

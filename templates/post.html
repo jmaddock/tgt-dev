@@ -1,0 +1,28 @@
+<li class="media">
+    <a class="pull-left" href="">
+	<img class="media-object" src="http://graph.facebook.com/{{user}}/picture?type=square">
+    </a>
+    <div class="media-body">
+	<div class="well" style="padding-bottom:5px">
+	    <div class="name">
+		<h4 class="media-heading">{{user_name}}</h4>
+	    </div>
+	    <div class="content">
+                <p>{{good_thing}}</p>
+                <p>{{reason}}</p>
+            </div>
+	    <div class="control">
+                <form id='cheer' data-id={{post.key()}}>
+                    <button name='good_thing' value='{{id}}' type='submit' formmethod='post' formaction='/cheer'>cheer</button>
+                </form>
+                <form id='comment' data-id={{id}}>
+                                     Comment:  <input type="text" name="comment_text"/>
+                    <button name='good_thing' value='{{id}}' type='submit'>comment</button>
+                </form>
+		<a href="#" class="link">{{num_cheers}} cheer</a>
+		<a href="#" class="link">delete</a>
+		<a href="#" class="link">comment</a>
+	    </div>
+	</div>
+    </div>
+</li>

@@ -1,0 +1,68 @@
+.navbar {
+  margin: 0px;
+}
+.navbar .tall{
+  line-height: 80px
+}
+.thumbnails .portfolio {
+  margin-bottom: 0px
+}
+.navbar-inner .mine{
+  min-height: 40px;
+  padding-right: 20px;
+  padding-left: 20px;
+  background-color: white;
+  background-image: none;
+  background-image: none;
+  background-image: none;
+  background-image: none;
+  background-image: none;
+  background-repeat: no-repeat;
+  border: 1px solid #d4d4d4;
+  -webkit-border-radius: 4px;
+     -moz-border-radius: 4px;
+          border-radius: 4px;
+  filter: none;
+  -webkit-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.065);
+     -moz-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.065);
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.065);
+}
+h1, h3, h3, h4, h5, h6 {
+  color: #777
+}
+.footer{
+  background-color:white;
+}
+hr.footer {
+  margin:0px;
+}
+
+.media-body .well {
+  background-color: #eee;
+  padding: 0px;
+}
+.media-body .name {
+  padding: 10px;
+  padding-top: 7px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid #e3e3e3;
+}
+
+.name .media-heading {margin: 0px;}
+
+.media-body .content {
+  padding: 10px;
+  padding-top: 4px;
+  padding-bottom: 1px;
+}
+
+.media-body .control {
+  padding: 10px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.control .link {margin-right: 10px;}
+
+
+
