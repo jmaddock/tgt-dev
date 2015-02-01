@@ -13,18 +13,29 @@
                     <p>{{reason}}</p>
                 </div>
 	        <div class="control">
-                    <form id='cheer' data-id={{post.key()}}>
-                        <button name='good_thing' value='{{id}}' type='submit' formmethod='post' formaction='/cheer'>cheer</button>
-                    </form>
                     <form id='comment' data-id={{id}}>
                                      Comment:  <input type="text" name="comment_text"/>
                         <button name='good_thing' value='{{id}}' type='submit'>comment</button>
                     </form>
-		    <a href="#" class="link">{{num_cheers}} cheer</a>
+		    <a href="#" class="link" id='cheer' data-id='{{id}}'>{{num_cheers}} cheers</a>
 		    <a href="#" class="link">delete</a>
-		    <a href="#" class="link">comment</a>
+		    <a href="#" class="link" data-toggle="collapse" data-target="#comments" id='comment' data-id={{id}}>{{num_comments}} comments</a>
 	        </div>
+                <div class="media.collapse" id='comments' data-id={{id}}></div>
 	    </div>
         </div>
     </li>
+</script>
+
+<script id='comment_tpl' type='text/html'>
+    <div class="media-body" id='comment' data-good_thing_id='{{good_thing_id}}''>
+	<div class="name">
+	    <h4 class="media-heading">{{user_name}}</h4>
+	</div>
+	<div class="content">{{comment_text}}</div>
+	<div class="control">
+	    <a href="#" class="link">comment</a>
+	    <a href="#" class="link">delete</a>
+	</div>
+    </div>
 </script>

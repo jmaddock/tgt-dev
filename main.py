@@ -150,7 +150,8 @@ class PostHandler(BaseHandler):
         if self.request.get('view') != '':
             good_things = models.GoodThing.all().order('created')
             if self.request.get('view') == 'me':
-                user = models.User.get_by_key_name(current_user['id'])
+                user_id = str(self.current_user['id'])
+                user = models.User.get_by_key_name(user_id)
                 good_things.filter('user =',user)
             result = [x.template() for x in good_things]
         else:
@@ -200,32 +201,42 @@ class CheerHandler(BaseHandler):
     def post(self):
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
-        good_thing_id = self.request.get('good_thing')
-        good_thing = models.GoodThing.get(good_thing_id)
+        good_thing_id = long(self.request.get('good_thing'))
+        good_thing = models.GoodThing.get_by_id(good_thing_id)
         cheer = models.Cheer(
             user=user,
             good_thing=good_thing,
         )
         cheer.put()
-        good_thing.cheers += 1
-        good_thing.put()
-        self.redirect('/')
+        self.response.headers['Content-Type'] = 'application/json'
+        result = {'cheers':good_thing.num_cheers()}
+        self.response.out.write(json.dumps(result))
 
 class CommentHandler(BaseHandler):
     def post(self):
-        user_id = str(self.current_user['id'])
-        user = models.User.get_by_key_name(user_id)
-        good_thing_id = self.request.get('good_thing')
-        good_thing = models.GoodThing.get(good_thing_id)
         comment_text = self.request.get('comment_text')
-        comment = models.Comment(
-            comment_text=comment_text,
-            user=user,
-            good_thing=good_thing,
-        )
-        comment.put()
+        good_thing_id = long(self.request.get('good_thing'))
+        good_thing = models.GoodThing.get_by_id(good_thing_id)
+        if comment_text != '':
+            user_id = str(self.current_user['id'])
+            user = models.User.get_by_key_name(user_id)
+            result = [self.save_comment(comment_text=comment_text,
+                                        user=user,
+                                        good_thing=good_thing)]
+        else:
+            comments = good_thing.comment_set.order('created').fetch(limit=None)
+            result = [x.template() for x in comments]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(comment.template()))
+
+        def save_comment(self, comment_text, user, good_thing):
+            comment = models.Comment(
+                comment_text=comment_text,
+                user=user,
+                good_thing=good_thing,
+            )
+            comment.put()
+            return comment
 
 class LogoutHandler(BaseHandler):
     def get(self):

@@ -6,9 +6,13 @@ indexes:
   - name: created
     direction: desc
 
+- kind: GoodThing
+  properties:
+  - name: user
+  - name: created
+
 - kind: Comment
   ancestor: yes
   properties:
   - name: good_thing
   - name: created
-    direction: desc

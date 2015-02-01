@@ -35,8 +35,9 @@ class GoodThing(db.Model):
             'reason':self.reason,
             'user_id':self.user.id,
             'user_name':self.user.name,
-            'get_cheers':self.get_cheers(),
+            #'get_cheers':self.get_cheers(),
             'num_cheers':self.num_cheers(),
+            'num_comments':self.num_comments(),
             #add img
         }
         return template
@@ -53,6 +54,9 @@ class GoodThing(db.Model):
     def num_cheers(self):
         return self.cheer_set.count()
 
+    def num_comments(self):
+        return self.comment_set.count()
+
 class Cheer(db.Model):
     user = db.ReferenceProperty(User,required=True)
     good_thing = db.ReferenceProperty(GoodThing,required=True)
@@ -67,6 +71,7 @@ class Comment(db.Model):
     def template(self):
         template = {
             'comment_text':self.comment_text,
-            'user':self.user.id
+            'user_name':self.user.name,
+            'good_thing_id':self.good_thing.key().id()
         }
         return template

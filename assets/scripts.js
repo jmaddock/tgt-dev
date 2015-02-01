@@ -24,28 +24,38 @@ $( document ).ready(function() {
 });
 
 // add a cheer
-$( document ).ready(function() {
-    $( "#cheer" ).submit(function( event ) {
-        var data = 'good_thing=' + $( "#cheer" ).data('id');
-
-        $.post( "/cheer",data).done(alert('1 more cheer!'));
-        return false;
-    });
-});
-
-// add a comment
-$( document ).ready(function() {
-    $( "#comment" ).submit(function( event ) {
-        var data = $( "#comment" ).serialize() + '&good_thing=' + $( "#comment" ).data('id');
-
-        $.post( "/comment",data).done(function(){
-            alert('added a new comment!');
-            $( '#comment' ).each(function(){
-                this.reset();
-            });
+$(document).on("click","a#cheer",function(e) {
+        var url_data = 'good_thing=' + $(this).data('id');
+        $.post( "/cheer",url_data).done(function(data){
+            var result = data + ' cheers'
+            $(this).append(result);
         });
         return false;
+});
+
+// save a comment
+$(document).on("submit","form#comment",function(e) {
+    var good_thing = $(this);
+    var url_data = $( this ).serialize() + '&good_thing=' + $( this ).data('id');
+    $.post( "/comment",url_data).done(function(data){
+        good_thing.trigger("reset");
+        var id = good_thing.data('id');
+        get_comments(data,id);
     });
+    return false;
+});
+
+// get all comments
+$(document).on("click","a#comment",function(e) {
+    var good_thing = $(this);
+    alert(good_thing.data('id'))
+    var url_data = 'good_thing=' + good_thing.data('id');
+    alert('click')
+    $.post( "/comment",url_data).done(function(data){
+        var id = good_thing.data('id');
+        get_comments(data,id);
+    });
+    return false;
 });
 
 // get all posts on page load
@@ -58,6 +68,19 @@ window.onload = function() {
     });
 };
 
+// change views
+$( document ).ready(function() {
+    $( "a#view_select" ).click(function( event ) {
+        var data = 'view=' + $(this).data('view');
+        $.post( "/post",data).done(function (data) {
+            $('ul#good_things').empty();
+            get_posts(data);
+            //window.history.pushState("", "", '/');
+        });
+        return false;
+    });
+});
+
 // render posts from template and json data
 function get_posts(post_list) {
     $.get('templates/good_thing_tpl.html', function(templates) {
@@ -66,6 +89,17 @@ function get_posts(post_list) {
             // template file which contains our greetings template.
             var template = $(templates).filter('#good_thing_tpl').html();
             $('ul#good_things').prepend(Mustache.render(template, data));
+        });
+    });
+}
+
+function get_comments(comment_list,id) {
+    $.get('templates/good_thing_tpl.html', function(templates) {
+        comment_list.forEach(function(data) {
+            // Fetch the <script /> block from the loaded external
+            // template file which contains our greetings template.
+            var template = $(templates).filter('#comment_tpl').html();
+            $('div#comments[data-id="'+id+'"]').prepend(Mustache.render(template, data));
         });
     });
 }

@@ -44,14 +44,13 @@
 		</div>
 	    </div>
 	</div>
-        <a href='/'>all</a>
-        <a href='/?view=me'>my posts</a>
+        <a href='#' id='view_select' data-view='all'>all</a>
+        <a href='#' id='view_select' data-view='me'>my posts</a>
     </div>
     {% endif %}
     <ul class="media-list" id='good_things'>
     </ul>
 </div>
-<div id='sampleArea'></div>
 <script>
  // load b sdk and log in w/ fb button
  window.fbAsyncInit = function() {
