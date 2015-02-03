@@ -227,7 +227,7 @@ class CommentHandler(BaseHandler):
             comments = good_thing.comment_set.order('created').fetch(limit=None)
             result = [x.template() for x in comments]
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.out.write(json.dumps(comment.template()))
+        self.response.out.write(json.dumps(result))
 
         def save_comment(self, comment_text, user, good_thing):
             comment = models.Comment(

@@ -12,7 +12,6 @@ indexes:
   - name: created
 
 - kind: Comment
-  ancestor: yes
   properties:
   - name: good_thing
   - name: created
