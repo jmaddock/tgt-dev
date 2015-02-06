@@ -125,37 +125,34 @@ class HomeHandler(BaseHandler):
         if current_user:
             view = self.request.get('view')
             template = jinja_environment.get_template('index.html')
-            posts = models.GoodThing.all().order('-created')
-            if view == 'me':
-                user = models.User.get_by_key_name(current_user['id'])
-                posts.filter('user =',user)
             template_values = {
                 'facebook_app_id':FACEBOOK_APP_ID,
                 'current_user':current_user,
-                'posts':posts
             }
             self.response.out.write(template.render(template_values))
         else:
             template = jinja_environment.get_template('landing.html')
-            posts = models.GoodThing.all()
             template_values = {
                 'facebook_app_id':FACEBOOK_APP_ID,
-                'current_user':current_user,
-                'posts':posts
             }
             self.response.out.write(template.render(template_values))
 
 class PostHandler(BaseHandler):
     def post(self):
-        if self.request.get('view') != '':
-            good_things = models.GoodThing.all().order('created')
-            if self.request.get('view') == 'me':
-                user_id = str(self.current_user['id'])
+        user_id = str(self.current_user['id'])
+        view = self.request.get('view')
+        if view != '':
+            good_things = models.GoodThing.all().order('created').filter('deleted =',False)
+            if view == 'me':
                 user = models.User.get_by_key_name(user_id)
                 good_things.filter('user =',user)
-            result = [x.template() for x in good_things]
+            elif view != 'all':
+                user_id = str(self.request.get('view'))
+                user = models.User.get_by_key_name(user_id)
+                good_things.filter('user =',user)
+            result = [x.template(user_id) for x in good_things]
         else:
-            result = [self.save_post().template()]
+            result = [self.save_post().template(user_id)]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
 
@@ -217,26 +214,38 @@ class CommentHandler(BaseHandler):
         comment_text = self.request.get('comment_text')
         good_thing_id = long(self.request.get('good_thing'))
         good_thing = models.GoodThing.get_by_id(good_thing_id)
+        user_id = str(self.current_user['id'])
         if comment_text != '':
-            user_id = str(self.current_user['id'])
             user = models.User.get_by_key_name(user_id)
             result = [self.save_comment(comment_text=comment_text,
                                         user=user,
-                                        good_thing=good_thing)]
+                                        good_thing=good_thing).template(user_id)]
         else:
-            comments = good_thing.comment_set.order('created').fetch(limit=None)
-            result = [x.template() for x in comments]
+            comments = good_thing.comment_set.order('created').filter('deleted =',False).fetch(limit=None)
+            result = [x.template(user_id) for x in comments]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
 
-        def save_comment(self, comment_text, user, good_thing):
-            comment = models.Comment(
-                comment_text=comment_text,
-                user=user,
-                good_thing=good_thing,
-            )
+    def save_comment(self, comment_text, user, good_thing):
+        comment = models.Comment(
+            comment_text=comment_text,
+            user=user,
+            good_thing=good_thing,
+        )
+        comment.put()
+        return comment
+
+class DeleteHandler(BaseHandler):
+    def post(self):
+        obj_id = long(self.request.get('id'))
+        if self.request.get('type') == 'good_thing':
+            good_thing = models.GoodThing.get_by_id(obj_id)
+            good_thing.deleted = True
+            good_thing.put()
+        elif self.request.get('type') == 'comment':
+            comment = models.Comment.get_by_id(obj_id)
+            comment.deleted = True
             comment.put()
-            return comment
 
 class LogoutHandler(BaseHandler):
     def get(self):
@@ -304,6 +313,7 @@ app = webapp2.WSGIApplication(
      ('/post', PostHandler),
      ('/cheer', CheerHandler),
      ('/comment', CommentHandler),
+     ('/delete', DeleteHandler),
      ('/intro', IntroHandler),
      ('/privacy', PrivacyHandler),
      ('/settings', SettingsHandler),

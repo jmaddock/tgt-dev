@@ -33,6 +33,18 @@ $(document).on("click","a#cheer",function(e) {
         return false;
 });
 
+
+// delete a post or comment
+$(document).on("click","a#delete",function(e) {
+    var id = $(this).data('id');
+    var type = $(this).data('parent');
+    var url_data = 'id=' + id + '&type=' + type;
+    $.post( "/delete",url_data).done(function(data){
+        $('#'+type+'[data-id="'+id+'"]').empty();
+    });
+    return false;
+});
+
 // save a comment
 $(document).on("submit","form#comment",function(e) {
     var good_thing = $(this);
@@ -48,9 +60,7 @@ $(document).on("submit","form#comment",function(e) {
 // get all comments
 $(document).on("click","a#comment",function(e) {
     var good_thing = $(this);
-    alert(good_thing.data('id'))
     var url_data = 'good_thing=' + good_thing.data('id');
-    alert('click')
     $.post( "/comment",url_data).done(function(data){
         var id = good_thing.data('id');
         get_comments(data,id);
@@ -79,6 +89,18 @@ $( document ).ready(function() {
         });
         return false;
     });
+});
+
+
+// view a user profile
+$(document).on("click","a#profile_link",function(e) {
+    var url_data = 'view=' + $(this).data('id');
+    $.post( "/post",data).done(function (data) {
+        $('ul#good_things').empty();
+        get_posts(data);
+        //window.history.pushState("", "", '/');
+    });
+    return false;
 });
 
 // render posts from template and json data

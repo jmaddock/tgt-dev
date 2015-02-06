@@ -28,7 +28,11 @@ class GoodThing(db.Model):
     #cheers = db.IntegerProperty(default=0)
     img = db.BlobProperty()
 
-    def template(self):
+    def template(self,user_id):
+        if user_id == self.user.id:
+            current_user = True
+        else:
+            current_user = False
         template = {
             'id':self.key().id(),
             'good_thing':self.good_thing,
@@ -38,6 +42,7 @@ class GoodThing(db.Model):
             #'get_cheers':self.get_cheers(),
             'num_cheers':self.num_cheers(),
             'num_comments':self.num_comments(),
+            'current_user':current_user
             #add img
         }
         return template
@@ -55,7 +60,7 @@ class GoodThing(db.Model):
         return self.cheer_set.count()
 
     def num_comments(self):
-        return self.comment_set.count()
+        return self.comment_set.filter('deleted =',False).count()
 
 class Cheer(db.Model):
     user = db.ReferenceProperty(User,required=True)
@@ -67,11 +72,19 @@ class Comment(db.Model):
     user = db.ReferenceProperty(User,required=True)
     good_thing = db.ReferenceProperty(GoodThing,required=True)
     created = db.DateTimeProperty(auto_now_add=True)
+    deleted = db.BooleanProperty(default=False)
 
-    def template(self):
+    def template(self,user_id):
+        if user_id == self.user.id:
+            current_user = True
+        else:
+            current_user = False
         template = {
+            'id':self.key().id(),
             'comment_text':self.comment_text,
             'user_name':self.user.name,
-            'good_thing_id':self.good_thing.key().id()
+            'user_id':self.user.id,
+            'good_thing_id':self.good_thing.key().id(),
+            'current_user':current_user
         }
         return template

@@ -1,12 +1,12 @@
 <script id="good_thing_tpl" type="text/html">
-    <li class="media">
+    <li class="media" id='good_thing' data-id={{id}}>
         <a class="pull-left" href="">
 	    <img class="media-object" src="http://graph.facebook.com/{{user_id}}/picture?type=square">
         </a>
         <div class="media-body">
 	    <div class="well" style="padding-bottom:5px">
 	        <div class="name">
-		    <h4 class="media-heading">{{user_name}}</h4>
+		    <h4 class="media-heading"><a href='#' id='profile_link' data-id={{user_id}}>{{user_name}}</a></h4>
 	        </div>
 	        <div class="content">
                     <p>{{good_thing}}</p>
@@ -18,7 +18,7 @@
                         <button name='good_thing' value='{{id}}' type='submit'>comment</button>
                     </form>
 		    <a href="#" class="link" id='cheer' data-id='{{id}}'>{{num_cheers}} cheers</a>
-		    <a href="#" class="link">delete</a>
+		    {{#current_user}}<a href="#" class="link" data-id={{id}} data-parent='good_thing' id='delete'>delete</a>{{/current_user}}
 		    <a href="#" class="link" data-toggle="collapse" data-target="#comments" id='comment' data-id={{id}}>{{num_comments}} comments</a>
 	        </div>
                 <div class="media.collapse" id='comments' data-id={{id}}></div>
@@ -28,14 +28,13 @@
 </script>
 
 <script id='comment_tpl' type='text/html'>
-    <div class="media-body" id='comment' data-good_thing_id='{{good_thing_id}}''>
+    <div class="media-body" id='comment' data-good_thing_id='{{good_thing_id}}' data-id={{id}}>
 	<div class="name">
-	    <h4 class="media-heading">{{user_name}}</h4>
+	    <h4 class="media-heading"><a href='#' id='profile_link' data-id={{user_id}}>{{user_name}}</a></h4>
 	</div>
 	<div class="content">{{comment_text}}</div>
 	<div class="control">
-	    <a href="#" class="link">comment</a>
-	    <a href="#" class="link">delete</a>
+	    {{#current_user}}<a href="#" class="link" id='delete' data-id={{id}} data-parent='comment'>delete</a>{{/current_user}}
 	</div>
     </div>
 </script>

@@ -15,3 +15,13 @@ indexes:
   properties:
   - name: good_thing
   - name: created
+
+- kind: GoodThing
+  properties:
+  - name: deleted
+  - name: created
+
+- kind: Comment
+  properties:
+  - name: deleted
+  - name: created
