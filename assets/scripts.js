@@ -25,10 +25,11 @@ $( document ).ready(function() {
 
 // add a cheer
 $(document).on("click","a#cheer",function(e) {
-        var url_data = 'good_thing=' + $(this).data('id');
+    var cheer = $(this)
+    var url_data = 'good_thing=' + cheer.parents('div#data_container').data('id');
         $.post( "/cheer",url_data).done(function(data){
-            var result = data + ' cheers'
-            $(this).append(result);
+            var result = data.cheers + ' cheers';
+            cheer.text(result);
         });
         return false;
 });
@@ -36,11 +37,11 @@ $(document).on("click","a#cheer",function(e) {
 
 // delete a post or comment
 $(document).on("click","a#delete",function(e) {
-    var id = $(this).data('id');
-    var type = $(this).data('parent');
+    var id = $(this).parents('div#data_container').data('id');
+    var type = $(this).parents('div#data_container').data('type');
     var url_data = 'id=' + id + '&type=' + type;
     $.post( "/delete",url_data).done(function(data){
-        $('#'+type+'[data-id="'+id+'"]').empty();
+        $('div[data-id="'+id+'"]').empty();
     });
     return false;
 });
@@ -48,10 +49,10 @@ $(document).on("click","a#delete",function(e) {
 // save a comment
 $(document).on("submit","form#comment",function(e) {
     var good_thing = $(this);
-    var url_data = $( this ).serialize() + '&good_thing=' + $( this ).data('id');
+    var url_data = $( this ).serialize() + '&good_thing=' + $( this ).parents('div#data_container').data('id');
     $.post( "/comment",url_data).done(function(data){
         good_thing.trigger("reset");
-        var id = good_thing.data('id');
+        var id = good_thing.parents('div#data_container').data('id');
         get_comments(data,id);
     });
     return false;
@@ -60,9 +61,9 @@ $(document).on("submit","form#comment",function(e) {
 // get all comments
 $(document).on("click","a#comment",function(e) {
     var good_thing = $(this);
-    var url_data = 'good_thing=' + good_thing.data('id');
+    var url_data = 'good_thing=' + good_thing.parents('div#data_container').data('id');
     $.post( "/comment",url_data).done(function(data){
-        var id = good_thing.data('id');
+        var id = good_thing.parents('div#data_container').data('id');
         get_comments(data,id);
     });
     return false;
@@ -85,7 +86,6 @@ $( document ).ready(function() {
         $.post( "/post",data).done(function (data) {
             $('ul#good_things').empty();
             get_posts(data);
-            //window.history.pushState("", "", '/');
         });
         return false;
     });
@@ -94,11 +94,10 @@ $( document ).ready(function() {
 
 // view a user profile
 $(document).on("click","a#profile_link",function(e) {
-    var url_data = 'view=' + $(this).data('id');
+    var url_data = 'view=' + $(this).parents('div#data_container').data('user_id');
     $.post( "/post",data).done(function (data) {
         $('ul#good_things').empty();
         get_posts(data);
-        //window.history.pushState("", "", '/');
     });
     return false;
 });
