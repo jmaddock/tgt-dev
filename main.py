@@ -63,13 +63,12 @@ class BaseHandler(webapp2.RequestHandler):
                                                    FACEBOOK_APP_ID,
                                                    FACEBOOK_APP_SECRET)
             if cookie:
-                print cookie
                 # Okay so user logged in.
                 # Now, check to see if existing user
                 user = models.User.get_by_key_name(cookie["uid"])
+                graph = facebook.GraphAPI(cookie["access_token"])
                 if not user:
                     # Not an existing user so get user info
-                    graph = facebook.GraphAPI(cookie["access_token"])
                     profile = graph.get_object("me")
                     settings = models.Settings()
                     settings.put()
@@ -92,9 +91,9 @@ class BaseHandler(webapp2.RequestHandler):
                     'profile_url':user.profile_url,
                     'id':user.id,
                     'access_token':user.access_token,
-                    'public_user':user.public_user
+                    'public_user':user.public_user,
+                    'friends_list':graph.get_connections("me", "friends")
                 }
-                print self.session.get("user")
                 return self.session.get("user")
         return None
 
@@ -123,7 +122,6 @@ class HomeHandler(BaseHandler):
     def get(self):
         current_user = self.current_user
         if current_user:
-            view = self.request.get('view')
             template = jinja_environment.get_template('index.html')
             template_values = {
                 'facebook_app_id':FACEBOOK_APP_ID,
@@ -200,13 +198,23 @@ class CheerHandler(BaseHandler):
         user = models.User.get_by_key_name(user_id)
         good_thing_id = long(self.request.get('good_thing'))
         good_thing = models.GoodThing.get_by_id(good_thing_id)
-        cheer = models.Cheer(
-            user=user,
-            good_thing=good_thing,
-        )
-        cheer.put()
+        cheer = good_thing.cheer_set.filter('user =',user).get()
+        print cheer
+        if not cheer:
+            cheer = models.Cheer(
+                user=user,
+                good_thing=good_thing,
+            )
+            cheer.put()
+            cheered = True
+        else:
+            cheer.delete()
+            cheered = False
         self.response.headers['Content-Type'] = 'application/json'
-        result = {'cheers':good_thing.num_cheers()}
+        result = {
+            'cheers':good_thing.num_cheers(),
+            'cheered':cheered
+        }
         self.response.out.write(json.dumps(result))
 
 class CommentHandler(BaseHandler):
@@ -246,6 +254,9 @@ class DeleteHandler(BaseHandler):
             comment = models.Comment.get_by_id(obj_id)
             comment.deleted = True
             comment.put()
+            result = {'num_comments':comment.good_thing.num_comments()}
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.out.write(json.dumps(result))
 
 class LogoutHandler(BaseHandler):
     def get(self):

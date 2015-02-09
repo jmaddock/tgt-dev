@@ -42,7 +42,8 @@ class GoodThing(db.Model):
             #'get_cheers':self.get_cheers(),
             'num_cheers':self.num_cheers(),
             'num_comments':self.num_comments(),
-            'current_user':current_user
+            'current_user':current_user,
+            'cheered':self.cheered(user_id)
             #add img
         }
         return template
@@ -54,6 +55,15 @@ class GoodThing(db.Model):
         else:
             result = None
         return result
+
+    def cheered(self,user_id):
+        user = User.get_by_key_name(user_id)
+        cheer = self.cheer_set.filter('user =',user).get()
+        if cheer:
+            cheered = True
+        else:
+            cheered = False
+        return cheered
 
     #maybe delete
     def num_cheers(self):

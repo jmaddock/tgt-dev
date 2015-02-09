@@ -28,7 +28,12 @@ $(document).on("click","a#cheer",function(e) {
     var cheer = $(this)
     var url_data = 'good_thing=' + cheer.parents('div#data_container').data('id');
         $.post( "/cheer",url_data).done(function(data){
-            var result = data.cheers + ' cheers';
+            alert(data.cheered);
+            if (data.cheered) {
+                var result = '(' + data.cheers + ') uncheer';
+            } else {
+                var result = '(' + data.cheers + ') cheer';
+            }
             cheer.text(result);
         });
         return false;
@@ -41,6 +46,10 @@ $(document).on("click","a#delete",function(e) {
     var type = $(this).parents('div#data_container').data('type');
     var url_data = 'id=' + id + '&type=' + type;
     $.post( "/delete",url_data).done(function(data){
+        if (type == 'comment') {
+            var result = data.num_comments + ' comments'
+            $('div[data-id="'+id+'"]').parents('div#data_container').find('a#comment').text(result)
+        }
         $('div[data-id="'+id+'"]').empty();
     });
     return false;
@@ -61,12 +70,21 @@ $(document).on("submit","form#comment",function(e) {
 // get all comments
 $(document).on("click","a#comment",function(e) {
     var good_thing = $(this);
-    var url_data = 'good_thing=' + good_thing.parents('div#data_container').data('id');
-    $.post( "/comment",url_data).done(function(data){
-        var id = good_thing.parents('div#data_container').data('id');
-        get_comments(data,id);
-    });
-    return false;
+    if (good_thing.data('toggle') === 'off') {
+        alert(good_thing.data('toggle'));
+        var url_data = 'good_thing=' + good_thing.parents('div#data_container').data('id');
+        $.post( "/comment",url_data).done(function(data){
+            var id = good_thing.parents('div#data_container').data('id');
+            get_comments(data,id);
+        });
+        good_thing.data('toggle', 'on');
+        return false;
+    } else if (good_thing.data('toggle') === 'on'){
+        alert(good_thing.data('toggle'));
+        good_thing.parents('div#data_container').find('div#comments').text('');
+        good_thing.data('toggle', 'off');
+        return false;
+    }
 });
 
 // get all posts on page load
@@ -120,7 +138,7 @@ function get_comments(comment_list,id) {
             // Fetch the <script /> block from the loaded external
             // template file which contains our greetings template.
             var template = $(templates).filter('#comment_tpl').html();
-            $('div#comments[data-id="'+id+'"]').prepend(Mustache.render(template, data));
+            $('div#data_container[data-id="'+id+'"]').find('div#comments').prepend(Mustache.render(template, data));
         });
     });
 }
