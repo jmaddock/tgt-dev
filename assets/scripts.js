@@ -113,7 +113,7 @@ $( document ).ready(function() {
 // view a user profile
 $(document).on("click","a#profile_link",function(e) {
     var url_data = 'view=' + $(this).parents('div#data_container').data('user_id');
-    $.post( "/post",data).done(function (data) {
+    $.post( "/post",url_data).done(function (data) {
         $('ul#good_things').empty();
         get_posts(data);
     });
@@ -142,3 +142,56 @@ function get_comments(comment_list,id) {
         });
     });
 }
+
+
+window.fbAsyncInit = function() {
+    FB.init({
+        appId      : "997456320282204", // App ID
+        version: 'v2.0',
+        status     : true, // check login status
+        cookie     : true, // enable cookies to allow the server to access the session
+        xfbml      : true  // parse XFBML
+    });
+
+    // logout handler
+    FB.Event.subscribe('auth.logout', function(response) {
+        window.location = "http://tgt-dev.appspot.com/logout";
+    });
+    var friendsIDarray = [];
+    var user_friend_list;
+
+    FB.api(
+        "/me/taggable_friends",
+        function (response) {
+            if (response) {
+                alert('this worked');
+                alert(response.data);
+                console.log(response.error)
+            }
+            if (response && !response.error) {
+                alert('response');
+                alert(response);
+                /* handle the result */
+                console.log(response)
+
+                for(var i=0; i<response.data.length; i++){
+
+                    var data = response.data;
+                    friendsIDarray.push(data[i].id);
+                }
+                user_friend_list = friendsIDarray.join();
+
+            }
+        }
+    );
+};
+
+// Load the SDK Asynchronously
+(function(d){
+    var js, id = 'facebook-jssdk'; if (d.getElementById(id)) {return;}
+    js = d.createElement('script'); js.id = id; js.async = true;
+    js.src = "//connect.facebook.net/en_US/sdk.js";
+    d.getElementsByTagName('head')[0].appendChild(js);
+}(document));
+
+cache = {}

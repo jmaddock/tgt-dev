@@ -1,27 +1,20 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
+{% extends "base.html" %}
+{% block head %}
+<head>
+    <title>3GT DEV</title>
+    <link type="text/css" rel="stylesheet" href="/assets/bootstrap.min.css" />
+    <link type="text/css" rel="stylesheet" href="/assets/portfolio.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src='assets/landing.js'></script>
+    <script src='assets/moustache.js'></script>
+    <!--  <script src='assets/bootstrap.min.js'></script> -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <title>Landing Page</title>
-  </head>
-  <body>
-    <fb:login-button autologoutlink="true" scope="publish_actions"></fb:login-button>
-    <div id="fb-root"></div>
-    <script>
-      window.fbAsyncInit = function() {
-        FB.init({appId: '{{ facebook_app_id }}', status: true, cookie: true,
-                 xfbml: true});
-        FB.Event.subscribe('{% if current_user %}auth.logout{% else %}auth.login{% endif %}', function(response) {
-          {% if current_user %} window.location = "/logout" {% else %} window.location.reload(); {% endif %}
-        });
-      };
-      (function() {
-        var e = document.createElement('script');
-        e.type = 'text/javascript';
-        e.src = document.location.protocol + '//connect.facebook.net/en_US/all.js';
-        e.async = true;
-        document.getElementById('fb-root').appendChild(e);
-      }());
-    </script>
-  </body>
-</html>
+</head>
+{% endblock %}
+{% block body %}
+<div id="good things" class="span8">
+    <p>Landing Page</p>
+    <ul class="media-list" id='good_things'>
+    </ul>
+</div>
+{% endblock %}

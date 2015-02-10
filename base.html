@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% autoescape true %}
+{% block head %}
 <head>
     <title>3GT DEV</title>
     <link type="text/css" rel="stylesheet" href="/assets/bootstrap.min.css" />
@@ -10,6 +11,7 @@
     <!--  <script src='assets/bootstrap.min.js'></script> -->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 </head>
+{% endblock %}
 <body>
     <div class="navbar navbar-static-top">
 	<div class="container">
@@ -22,7 +24,7 @@
 			<li>
 
                         </li>
-                        <fb:login-button autologoutlink="true" scope="publish_actions"></fb:login-button>
+                        <fb:login-button autologoutlink="true" scope="publish_actions, user_friends"></fb:login-button>
 		    </ul>
                 </div>
 	    </div>
