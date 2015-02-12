@@ -165,6 +165,8 @@ class PostHandler(BaseHandler):
         else:
             img = None
         if user.public_user:
+            if self.request.get('mentions') != '':
+                print self.request.get('mentions')
             if self.request.get('wall') == 'on':
                 wall = True
             else:
@@ -182,6 +184,7 @@ class PostHandler(BaseHandler):
         else:
             public = False
             wall = False
+            mentions = []
         good_thing = models.GoodThing(
             good_thing=good_thing,
             reason=reason,

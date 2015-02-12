@@ -5,6 +5,7 @@
     <link type="text/css" rel="stylesheet" href="/assets/bootstrap.min.css" />
     <link type="text/css" rel="stylesheet" href="/assets/portfolio.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src='http://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.js'></script>
     <script src='assets/scripts.js'></script>
     <script src='assets/moustache.js'></script>
     <!--  <script src='assets/bootstrap.min.js'></script> -->
@@ -22,10 +23,13 @@
 		<div class="media-body" style="overflow:inherit; margin-left:60px">
 		    <div class="well">
                         <form id="post" action=''>
-                            <p>Good Thing: <input type="text" name="good_thing"/></p>
-                            <p>Reason: <input type="text" name="reason"/></p>
-                            Img: <input type="file" name="img" multiple/>
+                            <p><input type="text" placeholder='Good Thing' name="good_thing"/></p>
+                            <p><input type="text" placeholder='Reason' name="reason"/></p>
+                            <p><input type="file" placeholder='Image' name="img" multiple/></p>
                             {% if current_user.public_user %}
+                            <p><div id="twitter_friend_tagging">
+                                <input id="twitter_friend_tagging" class="typehead" type="text" placeholder="Friends" name='mentions'/>
+                            </div></p>
                             Public: <input type='checkbox' id='settings_public' name='public'/>
                             Wall: <input type='checkbox' id='settings_wall' name='wall'/>
                             {% endif %}

@@ -11,7 +11,6 @@ $( document ).ready(function() {
 // clear form on success
 $( document ).ready(function() {
     $( "#post" ).submit(function( event ) {
-
         var data_in = $( "#post" ).serialize() + '&view=';
         $.post( "/post",data_in)
             .done(function(data){
@@ -21,45 +20,6 @@ $( document ).ready(function() {
                 get_posts(data);
             });
         return false;
-    });
-});
-
-// friend tagging with twitter plugin
-var substringMatcher = function(strs) {
-  return function findMatches(q, cb) {
-    var matches, substrRegex;
-
-    // an array that will be populated with substring matches
-    matches = [];
-
-    // regex used to determine if a string contains the substring `q`
-    substrRegex = new RegExp(q, 'i');
-
-    // iterate through the pool of strings and for any string that
-    // contains the substring `q`, add it to the `matches` array
-    $.each(strs, function(i, str) {
-      if (substrRegex.test(str)) {
-        // the typeahead jQuery plugin expects suggestions to a
-        // JavaScript object, refer to typeahead docs for more info
-        matches.push({ value: str });
-      }
-    });
-
-    cb(matches);
-  };
-};
-
-$( document ).ready(function() {
-    var friend_ids = JSON.parse(localStorage['friend_ids']);
-    $('input#twitter_friend_tagging').typeahead({
-      hint: true,
-      highlight: true,
-      minLength: 1
-    },
-    {
-      name: 'friend_ids',
-      displayKey: 'value',
-      source: substringMatcher(friend_ids)
     });
 });
 
@@ -194,24 +154,8 @@ window.fbAsyncInit = function() {
     });
 
     // logout handler
-    FB.Event.subscribe('auth.logout', function(response) {
-        window.location = "http://tgt-dev.appspot.com/logout";
-    });
-
-    // get friend list on login and store for friend tagging
-    FB.getLoginStatus(function(response){
-        var friend_ids = {}
-        FB.api("/me/taggable_friends",function (response) {
-            if (response && !response.error) {
-                /* handle the result */
-                response.data.forEach(function(friend_data) {
-                    friend_ids[friend_data.id] = friend_data.name
-                });
-                localStorage['friend_ids'] = JSON.stringify(friend_ids);
-            } else {
-                console.log(response.error)
-            }
-        });
+    FB.Event.subscribe('auth.login', function(response) {
+        window.location = "http://tgt-dev.appspot.com/";
     });
 };
 

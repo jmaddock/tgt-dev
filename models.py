@@ -20,7 +20,7 @@ class GoodThing(db.Model):
     reason = db.StringProperty(default=None)
     created = db.DateTimeProperty(auto_now_add=True)
     user = db.ReferenceProperty(User,required=True)
-    #mentions = db.StringListProperty()
+    mentions = db.StringListProperty()
     public = db.BooleanProperty(default=True)
     wall = db.BooleanProperty(default=False)
     #fbid = models.CharField(max_length=100,blank=True,default=None,editable=False)
