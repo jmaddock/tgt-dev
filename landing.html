@@ -1,15 +1,11 @@
 {% extends "base.html" %}
 {% block head %}
-<head>
-    <title>3GT DEV</title>
-    <link type="text/css" rel="stylesheet" href="/assets/bootstrap.min.css" />
-    <link type="text/css" rel="stylesheet" href="/assets/portfolio.css" />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-    <script src='assets/landing.js'></script>
-    <script src='assets/moustache.js'></script>
-    <!--  <script src='assets/bootstrap.min.js'></script> -->
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-</head>
+<script src='assets/landing.js'></script>
+{% endblock %}
+{% block nav_buttons %}
+<li>
+    <fb:login-button autologoutlink="true" scope="publish_actions, user_friends"></fb:login-button>
+</li>
 {% endblock %}
 {% block body %}
 <div id="good things" class="span8">

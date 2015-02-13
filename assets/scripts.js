@@ -48,7 +48,7 @@ var substringMatcher = function(strs) {
     cb(matches);
   };
 };
-
+/*
 $( document ).ready(function() {
     var friend_ids = JSON.parse(localStorage['friend_ids']);
     $('input#twitter_friend_tagging').typeahead({
@@ -61,7 +61,7 @@ $( document ).ready(function() {
       displayKey: 'value',
       source: substringMatcher(friend_ids)
     });
-});
+});*/
 
 // add a cheer
 $(document).on("click","a#cheer",function(e) {
@@ -87,10 +87,15 @@ $(document).on("click","a#delete",function(e) {
     var url_data = 'id=' + id + '&type=' + type;
     $.post( "/delete",url_data).done(function(data){
         if (type == 'comment') {
+            console.log('deleting a comment')
             var result = data.num_comments + ' comments'
-            $('div[data-id="'+id+'"]').parents('div#data_container').find('a#comment').text(result)
+            $('div[data-id="'+id+'"]').parents('div#data_container').find('a#comment').text(result);
+            $('div[data-id="'+id+'"]').remove();
+        } else {
+            console.log('deleting a good thing')
+            console.log($('div[data-id="'+id+'"]').parents('li#good_thing'))
+            $('div[data-id="'+id+'"]').parents('li#good_thing').remove();
         }
-        $('div[data-id="'+id+'"]').empty();
     });
     return false;
 });

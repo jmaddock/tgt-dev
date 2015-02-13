@@ -1,57 +1,54 @@
 <!DOCTYPE html>
 {% autoescape true %}
-{% block head %}
+
 <head>
     <title>3GT DEV</title>
-    <link type="text/css" rel="stylesheet" href="/assets/bootstrap.min.css" />
-    <link type="text/css" rel="stylesheet" href="/assets/portfolio.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/local_styles.css">
+    <!-- Latest compiled and minified JavaScript -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-    <script src='assets/scripts.js'></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <script src='assets/moustache.js'></script>
-    <!--  <script src='assets/bootstrap.min.js'></script> -->
+    {% block head %}
+    {% endblock %}
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 </head>
-{% endblock %}
 <body>
-    <div class="navbar navbar-static-top">
-	<div class="container">
-	    <div class="row">
-		<div class="span12">
-		    <a class="brand tall" href="/"><h3>3GT DEV</h3></a>
-                    <ul class="nav pull-right">
-			<li class="active"><a class="tall" href="#">Home</a></li>
-			<li><a class="tall" href="portfolio">Projects</a></li>
-			<li>
-
-                        </li>
-                        <fb:login-button autologoutlink="true" scope="publish_actions, user_friends"></fb:login-button>
-		    </ul>
-                </div>
-	    </div>
-	</div>
-    </div>
-    <hr style="margin-top:0px;">
-    <div class = "container">
-	<div class="row">
-	    <div class="span12">
-                <div class="row">
-            {% block body %}
-            {% endblock  %}
-            {% block settings %}
-            {% endblock %}
+    <!-- some nav related stuff (without icons) -->
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-8 col-md-offset-2 col-xs-12">
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="#">3 Good Things</a>
+                    </div>
+                    <ul class="nav navbar-nav navbar-right" class="dropdown-toggle" data-toggle="dropdown">
+                        {% block nav_buttons %}
+                        {% endblock %}
+                    </ul>
                 </div>
             </div>
         </div>
+    </nav>
+    <div class="container-fluid">
+        <div class="row">
+            {% block profile %}
+            {% endblock  %}
+            {% block body %}
+            {% endblock %}
+        </div>
     </div>
-    <div class="navbar navbar-fixed-bottom footer">
-	<hr class="footer">
-	<div class="container" style="width:940px">
-	    <div class="row">
-		<div class="span12">
-		    <h6 style="text-align:center">Jim Maddock | <a href='/privacy'>privacy</a><a href='</h6>
-		</div>
-	    </div>
-	</div>
-    </div>
-</body>
+    {% block bottom_nav %}
+    <!-- some footer related stuff -->
+    <nav class="navbar navbar-default navbar-fixed-bottom">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <h5 class="text-center text-muted">Developed by Jim Maddock</h6>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endblock %}
+</html>
 {% endautoescape %}
