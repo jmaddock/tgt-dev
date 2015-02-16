@@ -138,6 +138,7 @@ class HomeHandler(BaseHandler):
 class PostHandler(BaseHandler):
     def post(self):
         user_id = str(self.current_user['id'])
+        print user_id
         view = self.request.get('view')
         if view != '':
             good_things = models.GoodThing.all().order('created').filter('deleted =',False)
@@ -165,8 +166,6 @@ class PostHandler(BaseHandler):
         else:
             img = None
         if user.public_user:
-            if self.request.get('mentions') != '':
-                print self.request.get('mentions')
             if self.request.get('wall') == 'on':
                 wall = True
             else:
@@ -193,6 +192,22 @@ class PostHandler(BaseHandler):
             img=img
         )
         good_thing.put()
+        # handle mentions here
+        if self.request.get('mentions') != '':
+            mention_list = json.loads(self.request.get('mentions'))
+            print mention_list
+            for to_user_id in mention_list:
+                if 'app_id' in to_user_id:
+                    to_user = models.User.get_by_key_name(str(to_user_id['app_id']))
+                else:
+                    to_user = None
+                print to_user
+                mention = models.Mention(
+                    to_user=to_user,
+                    good_thing=good_thing,
+                    to_fb_user_id = to_user_id['id'] #may not have to store this...
+                )
+                mention.put()
         return good_thing
 
 class CheerHandler(BaseHandler):

@@ -20,7 +20,7 @@ class GoodThing(db.Model):
     reason = db.StringProperty(default=None)
     created = db.DateTimeProperty(auto_now_add=True)
     user = db.ReferenceProperty(User,required=True)
-    mentions = db.StringListProperty()
+    #mentions = db.StringListProperty()
     public = db.BooleanProperty(default=True)
     wall = db.BooleanProperty(default=False)
     #fbid = models.CharField(max_length=100,blank=True,default=None,editable=False)
@@ -98,3 +98,16 @@ class Comment(db.Model):
             'current_user':current_user
         }
         return template
+
+class Mention(db.Model):
+    to_fb_user_id = db.StringProperty(required=True)
+    to_user = db.ReferenceProperty(User)
+    good_thing = db.ReferenceProperty(GoodThing,required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+
+class Notifiction(db.Model):
+    from_user = db.ReferenceProperty(User,required=True),
+    to_user = db.ReferenceProperty(User,required=True)
+    obj_type = db.StringProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+    read = db.BooleanProperty(default=False)

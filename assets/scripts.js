@@ -9,61 +9,32 @@ $( document ).ready(function() {
 
 // submit a new post
 // clear form on success
-$( document ).ready(function() {
-    $( "#post" ).submit(function( event ) {
-
-        var data_in = $( "#post" ).serialize() + '&view=';
-        $.post( "/post",data_in)
-            .done(function(data){
-                $( '#post' ).each(function(){
-                    this.reset();
-                });
-                get_posts(data);
+$(document).on("click","#submit_good_thing",function(e) {
+    //console.log($( "#post" ).serialize());
+    var mention_list = JSON.stringify($('#magic_friend_tagging').magicSuggest().getSelection());
+    var data_in = $( "#post" ).serialize() + '&mentions=' + mention_list + '&view=';
+    $.post( "/post",data_in)
+        .done(function(data){
+            $( '#post' ).each(function(){
+                this.reset();
             });
-        return false;
+            get_posts(data);
+        });
+    return false;
+});
+
+// friend tagging with magicsuggest
+$( document ).ready(function() {
+    var friend_ids = JSON.parse(localStorage['friend_ids']);
+    $("input#magic_friend_tagging").magicSuggest({
+        placeholder: "Tag Friends",
+        allowFreeEntries: false,
+        data: friend_ids,
+        displayField: 'name',
+       // valueField: 'id'
     });
 });
 
-// friend tagging with twitter plugin
-var substringMatcher = function(strs) {
-  return function findMatches(q, cb) {
-    var matches, substrRegex;
-
-    // an array that will be populated with substring matches
-    matches = [];
-
-    // regex used to determine if a string contains the substring `q`
-    substrRegex = new RegExp(q, 'i');
-
-    // iterate through the pool of strings and for any string that
-    // contains the substring `q`, add it to the `matches` array
-    $.each(strs, function(i, str) {
-      if (substrRegex.test(str)) {
-        // the typeahead jQuery plugin expects suggestions to a
-        // JavaScript object, refer to typeahead docs for more info
-        matches.push({ value: str });
-      }
-    });
-
-    cb(matches);
-  };
-};
-/*
-$( document ).ready(function() {
-    var friend_ids = JSON.parse(localStorage['friend_ids']);
-    $('input#twitter_friend_tagging').typeahead({
-      hint: true,
-      highlight: true,
-      minLength: 1
-    },
-    {
-      name: 'friend_ids',
-      displayKey: 'value',
-      source: substringMatcher(friend_ids)
-    });
-});*/
-
-// add a cheer
 $(document).on("click","a#cheer",function(e) {
     var cheer = $(this)
     var url_data = 'good_thing=' + cheer.parents('div#data_container').data('id');
@@ -205,14 +176,36 @@ window.fbAsyncInit = function() {
 
     // get friend list on login and store for friend tagging
     FB.getLoginStatus(function(response){
-        var friend_ids = {}
-        FB.api("/me/taggable_friends",function (response) {
+        var friend_ids = [];
+        var friend_app_ids = {};
+        // get list of friends who use 3gt
+        FB.api("/me/friends",function (response) {
             if (response && !response.error) {
-                /* handle the result */
                 response.data.forEach(function(friend_data) {
-                    friend_ids[friend_data.id] = friend_data.name
+                    friend_app_ids[friend_data.name] = friend_data.id.toString();
                 });
-                localStorage['friend_ids'] = JSON.stringify(friend_ids);
+                console.log(friend_app_ids);
+                // get list of taggable fb friends
+                FB.api("/me/taggable_friends",function (response) {
+                    if (response && !response.error) {
+                        response.data.forEach(function(friend_data) {
+                            friend = {
+                                'name':friend_data.name,
+                                'id':friend_data.id.toString()
+                            };
+                            // if the a taggable friend uses 3gt, store the user id
+                            if (friend_data.name in friend_app_ids) {
+                                console.log(friend_app_ids[friend_data.name]);
+                                friend.app_id = friend_app_ids[friend_data.name];
+                                console.log(friend);
+                            }
+                            friend_ids.push(friend);
+                        });
+                        localStorage['friend_ids'] = JSON.stringify(friend_ids);
+                    } else {
+                        console.log(response.error)
+                    }
+                });
             } else {
                 console.log(response.error)
             }
@@ -228,4 +221,10 @@ window.fbAsyncInit = function() {
     d.getElementsByTagName('head')[0].appendChild(js);
 }(document));
 
-cache = {}
+// logout function
+$(document).on("click","a#logout",function(e) {
+    FB.logout(function(response) {
+        // user is now logged out
+    });
+    window.location = "http://tgt-dev.appspot.com/logout";
+});
