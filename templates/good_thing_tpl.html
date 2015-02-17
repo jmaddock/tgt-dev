@@ -21,9 +21,15 @@
                             <input type="text" name="comment_text" placeholder="Comment"/>
                             <button name='good_thing' value='{{id}}' type='submit'>comment</button>
                         </form>
+                        {{#mentions}}
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" id="mentions">with {{num_mentions}} others</a>
+                        <ul class="dropdown-menu">
+                            <li>{{name}}</li>
+                        </ul>
+                        {{/mentions}}
                         <a href="#" class="link" id='cheer' data-toggle={{#cheered}}"on"{{/cheered}}{{^cheered}}"off"{{/cheered}}>({{num_cheers}}) {{#cheered}}uncheer{{/cheered}}{{^cheered}}cheer{{/cheered}}</a>
                         {{#current_user}}<a href="#" class="link" id='delete'>delete</a>{{/current_user}}
-                        <a href="#" class="link" data-toggle="off" id='comment'>{{num_comments}} comments</a>
+                        <a href="#" class="link" data-toggle="off" id='comment'>({{num_comments}}) comments</a>
                     </div>
                     <!-- comments of the good thing -->
                     <div id="comments"></div>

@@ -18,7 +18,9 @@ $(document).on("click","#submit_good_thing",function(e) {
             $( '#post' ).each(function(){
                 this.reset();
             });
+            $('#magic_friend_tagging').magicSuggest().clear();
             get_posts(data);
+            get_stats();
         });
     return false;
 });
@@ -39,7 +41,6 @@ $(document).on("click","a#cheer",function(e) {
     var cheer = $(this)
     var url_data = 'good_thing=' + cheer.parents('div#data_container').data('id');
         $.post( "/cheer",url_data).done(function(data){
-            alert(data.cheered);
             if (data.cheered) {
                 var result = '(' + data.cheers + ') uncheer';
             } else {
@@ -63,9 +64,10 @@ $(document).on("click","a#delete",function(e) {
             $('div[data-id="'+id+'"]').parents('div#data_container').find('a#comment').text(result);
             $('div[data-id="'+id+'"]').remove();
         } else {
-            console.log('deleting a good thing')
-            console.log($('div[data-id="'+id+'"]').parents('li#good_thing'))
+            console.log('deleting a good thing');
+            console.log($('div[data-id="'+id+'"]').parents('li#good_thing'));
             $('div[data-id="'+id+'"]').parents('li#good_thing').remove();
+            get_stats();
         }
     });
     return false;
@@ -87,7 +89,6 @@ $(document).on("submit","form#comment",function(e) {
 $(document).on("click","a#comment",function(e) {
     var good_thing = $(this);
     if (good_thing.data('toggle') === 'off') {
-        alert(good_thing.data('toggle'));
         var url_data = 'good_thing=' + good_thing.parents('div#data_container').data('id');
         $.post( "/comment",url_data).done(function(data){
             var id = good_thing.parents('div#data_container').data('id');
@@ -96,7 +97,6 @@ $(document).on("click","a#comment",function(e) {
         good_thing.data('toggle', 'on');
         return false;
     } else if (good_thing.data('toggle') === 'on'){
-        alert(good_thing.data('toggle'));
         good_thing.parents('div#data_container').find('div#comments').text('');
         good_thing.data('toggle', 'off');
         return false;
@@ -109,6 +109,7 @@ window.onload = function() {
         var view = 'view=all';
         $.post( "/post",view).done(function(data){
             get_posts(data);
+            get_stats();
         });
     });
 };
@@ -159,6 +160,14 @@ function get_comments(comment_list,id) {
     });
 }
 
+function get_stats() {
+    $.post( "/stat",'').done(function (data) {
+        $('div#progress').css('width',data.progress);
+        $('span#progress').text(data.progress + ' Complete');
+        $('#good_things_today').text(data.posts_today + ' Good Things Today');
+        $('#good_things_total').text(data.posts + ' Total Good Things');
+    });
+}
 
 window.fbAsyncInit = function() {
     FB.init({

@@ -43,7 +43,9 @@ class GoodThing(db.Model):
             'num_cheers':self.num_cheers(),
             'num_comments':self.num_comments(),
             'current_user':current_user,
-            'cheered':self.cheered(user_id)
+            'cheered':self.cheered(user_id),
+            'mentions':self.get_mentions(),
+            'num_mentions':self.num_mentions(),
             #add img
         }
         return template
@@ -64,6 +66,14 @@ class GoodThing(db.Model):
         else:
             cheered = False
         return cheered
+
+    def get_mentions(self):
+        mentions = self.mention_set.fetch(limit=None)
+        result = [{'name':mention.to_user_name} for mention in mentions]
+        return result
+
+    def num_mentions(self):
+        return self.mention_set.count()
 
     #maybe delete
     def num_cheers(self):
@@ -101,13 +111,14 @@ class Comment(db.Model):
 
 class Mention(db.Model):
     to_fb_user_id = db.StringProperty(required=True)
+    to_user_name = db.StringProperty(required=True)
     to_user = db.ReferenceProperty(User)
     good_thing = db.ReferenceProperty(GoodThing,required=True)
     created = db.DateTimeProperty(auto_now_add=True)
 
-class Notifiction(db.Model):
+class Notification(db.Model):
     from_user = db.ReferenceProperty(User,required=True),
     to_user = db.ReferenceProperty(User,required=True)
-    obj_type = db.StringProperty(required=True)
+    event_type = db.StringProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     read = db.BooleanProperty(default=False)

@@ -34,6 +34,7 @@ import urllib2
 import models
 import app_config
 import json
+import datetime
 
 from google.appengine.ext import db
 from webapp2_extras import sessions
@@ -118,6 +119,18 @@ class BaseHandler(webapp2.RequestHandler):
         """
         return self.session_store.get_session()
 
+    def notify(self,event_type,to_user):
+        from_user_id = str(self.current_user['id'])
+        from_user = models.User.get_by_key_name(from_user_id)
+        if from_user != to_user:
+            notification = models.Notification(
+                from_user=from_user,
+                to_user=to_user,
+                event_type=event_type,
+            )
+            notification.put()
+        return from_user != to_user
+
 class HomeHandler(BaseHandler):
     def get(self):
         current_user = self.current_user
@@ -174,12 +187,6 @@ class PostHandler(BaseHandler):
                 public = True
             else:
                 public = False
-            if wall:
-                graph = facebook.GraphAPI(self.current_user['access_token'])
-                if img:
-                    graph.put_photo(image=raw_img,message=good_thing)
-                else:
-                    graph.put_object('me','feed',message=good_thing)
         else:
             public = False
             wall = False
@@ -199,15 +206,25 @@ class PostHandler(BaseHandler):
             for to_user_id in mention_list:
                 if 'app_id' in to_user_id:
                     to_user = models.User.get_by_key_name(str(to_user_id['app_id']))
+                    # handle mention notification
+                    self.notify(event_type='mention',to_user=to_user)
                 else:
                     to_user = None
                 print to_user
                 mention = models.Mention(
                     to_user=to_user,
                     good_thing=good_thing,
-                    to_fb_user_id = to_user_id['id'] #may not have to store this...
+                    to_fb_user_id = to_user_id['id'], #may not have to store this...
+                    to_user_name = to_user_id['name']
                 )
                 mention.put()
+        # handle posting to fb
+        if wall:
+            graph = facebook.GraphAPI(self.current_user['access_token'])
+            if img:
+                graph.put_photo(image=raw_img,message=good_thing)
+            else:
+                graph.put_object('me','feed',message=good_thing)
         return good_thing
 
 class CheerHandler(BaseHandler):
@@ -217,7 +234,6 @@ class CheerHandler(BaseHandler):
         good_thing_id = long(self.request.get('good_thing'))
         good_thing = models.GoodThing.get_by_id(good_thing_id)
         cheer = good_thing.cheer_set.filter('user =',user).get()
-        print cheer
         if not cheer:
             cheer = models.Cheer(
                 user=user,
@@ -225,6 +241,7 @@ class CheerHandler(BaseHandler):
             )
             cheer.put()
             cheered = True
+            self.notify(event_type='cheer',to_user=good_thing.user)
         else:
             cheer.delete()
             cheered = False
@@ -259,6 +276,7 @@ class CommentHandler(BaseHandler):
             good_thing=good_thing,
         )
         comment.put()
+        self.notify(event_type='comment',to_user=good_thing.user)
         return comment
 
 class DeleteHandler(BaseHandler):
@@ -314,21 +332,23 @@ class PrivacyHandler(webapp2.RequestHandler):
         template_values = {}
         self.response.out.write(template.render(template_values))
 
-class AjaxTest(webapp2.RequestHandler):
-    def get(self):
-        template = jinja_environment.get_template('ajax_test.html')
-        template_values = {}
-        self.response.out.write(template.render(template_values))
-
-class AjaxResponse(webapp2.RequestHandler):
+class StatHandler(BaseHandler):
     def post(self):
+        user_id = str(self.current_user['id'])
+        user = models.User.get_by_key_name(user_id)
+        posts = user.goodthing_set.filter('deleted =',False).count()
+        posts_today = user.goodthing_set.filter('created >=',datetime.date.today()).filter('deleted =',False).count()
+        progress = int((float(posts_today)/3)*100)
+        if progress > 100:
+            progress = 100
+        progress = str(progress) + '%'
+        response = {
+            'posts_today':posts_today,
+            'progress':progress,
+            'posts':posts
+        }
         self.response.headers['Content-Type'] = 'application/json'
-        json_data = {'text':'test test',
-                     'data':2}
-        self.response.out.write(json.dumps(json_data))
-        if self.request.get('default_fb') == 'on':
-            print 'true'
-        print type(self.request.get('default_fb'))
+        self.response.out.write(json.dumps(response))
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -346,8 +366,7 @@ app = webapp2.WSGIApplication(
      ('/intro', IntroHandler),
      ('/privacy', PrivacyHandler),
      ('/settings', SettingsHandler),
-     ('/ajax_test', AjaxTest),
-     ('/ajax_response', AjaxResponse)],
+     ('/stat', StatHandler)],
     debug=True,
     config=config
 )
