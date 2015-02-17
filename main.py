@@ -314,7 +314,7 @@ class SettingsHandler(BaseHandler):
         settings = user.settings
         reminder_days = self.request.get('reminder_days')
         if reminder_days != '':
-            settings.reminder_days = reminder_days
+            settings.reminder_days = int(reminder_days)
         if self.request.get('default_fb') == 'on':
             settings.default_fb = True
         else:
@@ -325,6 +325,13 @@ class SettingsHandler(BaseHandler):
             settings.default_public = False
         print settings.default_fb
         settings.put()
+
+    def get(self):
+        user_id = str(self.current_user['id'])
+        user = models.User.get_by_key_name(user_id)
+        result = user.settings.template()
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(result))
 
 class PrivacyHandler(webapp2.RequestHandler):
     def get(self):
@@ -338,6 +345,7 @@ class StatHandler(BaseHandler):
         user = models.User.get_by_key_name(user_id)
         posts = user.goodthing_set.filter('deleted =',False).count()
         posts_today = user.goodthing_set.filter('created >=',datetime.date.today()).filter('deleted =',False).count()
+        print datetime.datetime.today()
         progress = int((float(posts_today)/3)*100)
         if progress > 100:
             progress = 100

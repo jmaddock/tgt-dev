@@ -5,6 +5,14 @@ class Settings(db.Model):
     default_fb = db.BooleanProperty(default=False)
     default_public = db.BooleanProperty(default=False)
 
+    def template(self):
+        template = {
+            'reminder_days':self.reminder_days,
+            'default_fb':self.default_fb,
+            'default_public':self.default_public
+        }
+        return template
+
 class User(db.Model):
     id = db.StringProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)

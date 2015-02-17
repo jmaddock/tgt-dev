@@ -1,10 +1,9 @@
 // submit settings from settings form
 // generic alert on success
-$( document ).ready(function() {
-    $( "#settings" ).submit(function( event ) {
-        $.post( "/settings",$( "#settings" ).serialize()).done(alert('settings updated!'));
-        return false;
-    });
+$(document).on("click","button#save_settings",function(e) {
+    console.log($( "form#settings" ).serialize());
+    $.post( "/settings",$( "form#settings" ).serialize()).done(alert('settings updated!'));
+    get_settings();
 });
 
 // submit a new post
@@ -103,14 +102,18 @@ $(document).on("click","a#comment",function(e) {
     }
 });
 
-// get all posts on page load
+// on page load
 window.onload = function() {
     $( document ).ready(function() {
+        // get all posts on page load
         var view = 'view=all';
         $.post( "/post",view).done(function(data){
             get_posts(data);
-            get_stats();
         });
+        // get user settings
+        get_settings();
+        // get user stats
+        get_stats();
     });
 };
 
@@ -167,6 +170,16 @@ function get_stats() {
         $('#good_things_today').text(data.posts_today + ' Good Things Today');
         $('#good_things_total').text(data.posts + ' Total Good Things');
     });
+}
+
+function get_settings() {
+    $.get( "/settings",'')
+        .done(function(data) {
+            $('input#settings_wall').prop('checked', data.default_fb);
+            $('input#settings_public').prop('checked', data.default_public);
+            $('input#reminder_days').val(data.reminder_days);
+        });
+    return false;
 }
 
 window.fbAsyncInit = function() {
