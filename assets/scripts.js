@@ -12,6 +12,7 @@ $(document).on("click","#submit_good_thing",function(e) {
     //console.log($( "#post" ).serialize());
     var mention_list = JSON.stringify($('#magic_friend_tagging').magicSuggest().getSelection());
     var data_in = $( "#post" ).serialize() + '&mentions=' + mention_list + '&view=';
+    console.log(data_in)
     $.post( "/post",data_in)
         .done(function(data){
             $( '#post' ).each(function(){
@@ -114,6 +115,10 @@ window.onload = function() {
         get_settings();
         // get user stats
         get_stats();
+        // get unread notifications
+        $.get('/notify','').done(function(data) {
+            get_notifications(data);
+        })
     });
 };
 
@@ -180,6 +185,22 @@ function get_settings() {
             $('input#reminder_days').val(data.reminder_days);
         });
     return false;
+}
+
+function get_notifications(notification_list) {
+    $.get('templates/good_thing_tpl.html', function(templates) {
+        notification_list.forEach(function(data) {
+            var template;
+            if (data.event_type === 'comment') {
+                template = $(templates).filter('#comment_notification_tpl').html();
+            } else if (data.event_type === 'cheer') {
+                template = $(templates).filter('#cheer_notification_tpl').html();
+            } else if (data.event_type === 'mention') {
+                template = $(templates).filter('#mention_notification_tpl').html();
+            }
+            $('ul#notifications').prepend(Mustache.render(template, data));
+        });
+    });
 }
 
 window.fbAsyncInit = function() {

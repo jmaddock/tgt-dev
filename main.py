@@ -119,7 +119,7 @@ class BaseHandler(webapp2.RequestHandler):
         """
         return self.session_store.get_session()
 
-    def notify(self,event_type,to_user):
+    def notify(self,event_type,to_user,event_id):
         from_user_id = str(self.current_user['id'])
         from_user = models.User.get_by_key_name(from_user_id)
         if from_user != to_user:
@@ -127,6 +127,7 @@ class BaseHandler(webapp2.RequestHandler):
                 from_user=from_user,
                 to_user=to_user,
                 event_type=event_type,
+                event_id=str(event_id),
             )
             notification.put()
         return from_user != to_user
@@ -135,41 +136,48 @@ class HomeHandler(BaseHandler):
     def get(self):
         current_user = self.current_user
         if current_user:
-            template = jinja_environment.get_template('index.html')
+            user_id = str(self.current_user['id'])
+            user = models.User.get_by_key_name(user_id)
+            if user.public_user:
+                template = jinja_environment.get_template('public_main.html')
+            else:
+                template = jinja_environment.get_template('private_main.html')
             template_values = {
                 'facebook_app_id':FACEBOOK_APP_ID,
                 'current_user':current_user,
             }
-            self.response.out.write(template.render(template_values))
         else:
             template = jinja_environment.get_template('landing.html')
             template_values = {
                 'facebook_app_id':FACEBOOK_APP_ID,
             }
-            self.response.out.write(template.render(template_values))
+        self.response.out.write(template.render(template_values))
 
 class PostHandler(BaseHandler):
     def post(self):
         user_id = str(self.current_user['id'])
-        print user_id
         view = self.request.get('view')
         if view != '':
             good_things = models.GoodThing.all().order('created').filter('deleted =',False)
             if view == 'me':
                 user = models.User.get_by_key_name(user_id)
                 good_things.filter('user =',user)
-            elif view != 'all':
+                result = [x.template(user_id) for x in good_things]
+            elif view == 'all':
+                user = models.User.get_by_key_name(user_id)
+                result = [x.template(user_id) for x in good_things if (x.public or x.user.id == user.id)]
+            else:
                 user_id = str(self.request.get('view'))
                 user = models.User.get_by_key_name(user_id)
-                good_things.filter('user =',user)
-            result = [x.template(user_id) for x in good_things]
+                good_things.filter('user =',user).filter('wall =',True)
+                result = [x.template(user_id) for x in good_things]
         else:
             result = [self.save_post().template(user_id)]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
 
     def save_post(self):
-        good_thing = self.request.get('good_thing')
+        good_thing_text = self.request.get('good_thing')
         reason = self.request.get('reason')
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
@@ -191,26 +199,29 @@ class PostHandler(BaseHandler):
             public = False
             wall = False
             mentions = []
+        print wall, self.request.get('wall')
         good_thing = models.GoodThing(
-            good_thing=good_thing,
+            good_thing=good_thing_text,
             reason=reason,
             user=user,
             public=public,
-            img=img
+            img=img,
+            wall=wall
         )
         good_thing.put()
         # handle mentions here
         if self.request.get('mentions') != '':
             mention_list = json.loads(self.request.get('mentions'))
-            print mention_list
             for to_user_id in mention_list:
                 if 'app_id' in to_user_id:
                     to_user = models.User.get_by_key_name(str(to_user_id['app_id']))
+                    event_id = good_thing.key().id()
                     # handle mention notification
-                    self.notify(event_type='mention',to_user=to_user)
+                    self.notify(event_type='mention',
+                                to_user=to_user,
+                                event_id=event_id)
                 else:
                     to_user = None
-                print to_user
                 mention = models.Mention(
                     to_user=to_user,
                     good_thing=good_thing,
@@ -241,7 +252,10 @@ class CheerHandler(BaseHandler):
             )
             cheer.put()
             cheered = True
-            self.notify(event_type='cheer',to_user=good_thing.user)
+
+            self.notify(event_type='cheer',
+                        to_user=good_thing.user,
+                        event_id=good_thing_id)
         else:
             cheer.delete()
             cheered = False
@@ -264,7 +278,7 @@ class CommentHandler(BaseHandler):
                                         user=user,
                                         good_thing=good_thing).template(user_id)]
         else:
-            comments = good_thing.comment_set.order('created').filter('deleted =',False).fetch(limit=None)
+            comments = good_thing.comment_set.order('-created').filter('deleted =',False).fetch(limit=None)
             result = [x.template(user_id) for x in comments]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
@@ -276,7 +290,10 @@ class CommentHandler(BaseHandler):
             good_thing=good_thing,
         )
         comment.put()
-        self.notify(event_type='comment',to_user=good_thing.user)
+        event_id = comment.key().id()
+        self.notify(event_type='comment',
+                    to_user=good_thing.user,
+                    event_id=event_id,)
         return comment
 
 class DeleteHandler(BaseHandler):
@@ -323,7 +340,6 @@ class SettingsHandler(BaseHandler):
             settings.default_public = True
         else:
             settings.default_public = False
-        print settings.default_fb
         settings.put()
 
     def get(self):
@@ -345,18 +361,31 @@ class StatHandler(BaseHandler):
         user = models.User.get_by_key_name(user_id)
         posts = user.goodthing_set.filter('deleted =',False).count()
         posts_today = user.goodthing_set.filter('created >=',datetime.date.today()).filter('deleted =',False).count()
-        print datetime.datetime.today()
         progress = int((float(posts_today)/3)*100)
         if progress > 100:
             progress = 100
         progress = str(progress) + '%'
-        response = {
+        result = {
             'posts_today':posts_today,
             'progress':progress,
             'posts':posts
         }
         self.response.headers['Content-Type'] = 'application/json'
-        self.response.out.write(json.dumps(response))
+        self.response.out.write(json.dumps(result))
+
+class NotificationHandler(BaseHandler):
+    def get(self):
+        user_id = str(self.current_user['id'])
+        user = models.User.get_by_key_name(user_id)
+        notification_list = models.Notification.all().filter('read =',False)#.filter('to_user =',user)
+        result = []
+        for notification in notification_list:
+            result.append(notification.template())
+            #notification.read = True
+            #notification.put()
+
+        self.response.headers['Content-Type'] = 'application/json'
+        self.response.out.write(json.dumps(result))
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
@@ -374,7 +403,8 @@ app = webapp2.WSGIApplication(
      ('/intro', IntroHandler),
      ('/privacy', PrivacyHandler),
      ('/settings', SettingsHandler),
-     ('/stat', StatHandler)],
+     ('/stat', StatHandler),
+     ('/notify', NotificationHandler)],
     debug=True,
     config=config
 )

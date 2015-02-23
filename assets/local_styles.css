@@ -2,3 +2,6 @@ body {
   padding-bottom: 50px;
   padding-top: 70px; 
 }
+div.post {
+  overflow: visible;
+}

@@ -81,7 +81,11 @@ class GoodThing(db.Model):
         return result
 
     def num_mentions(self):
-        return self.mention_set.count()
+        count = self.mention_set.count()
+        if count > 0:
+            return count
+        else:
+            return None
 
     #maybe delete
     def num_cheers(self):
@@ -125,8 +129,17 @@ class Mention(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
 
 class Notification(db.Model):
-    from_user = db.ReferenceProperty(User,required=True),
-    to_user = db.ReferenceProperty(User,required=True)
+    from_user = db.ReferenceProperty(User,required=True, collection_name='from_user_set')
+    to_user = db.ReferenceProperty(User,required=True,collection_name='to_user_set')
     event_type = db.StringProperty(required=True)
+    event_id = db.StringProperty(required=True) # change to required = True
     created = db.DateTimeProperty(auto_now_add=True)
     read = db.BooleanProperty(default=False)
+
+    def template(self):
+        template = {
+            'from_user':self.from_user.name,
+            'event_type':self.event_type,
+            'event_id':self.event_id,
+        }
+        return template
