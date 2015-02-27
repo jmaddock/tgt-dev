@@ -1,27 +1,90 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
-    <title>3GT Intro</title>
-  </head>
-  <body>
-      <p>this is the intro page</p>
-      <a href='/'>to main page</a>
-    <script>
-      window.fbAsyncInit = function() {
-        FB.init({appId: '{{ facebook_app_id }}', status: true, cookie: true,
-                 xfbml: true});
-        FB.Event.subscribe('{% if current_user %}auth.logout{% else %}auth.login{% endif %}', function(response) {
-          {% if current_user %} window.location = "/logout" {% else %} window.location.reload(); {% endif %}
-        });
-      };
-      (function() {
-        var e = document.createElement('script');
-        e.type = 'text/javascript';
-        e.src = document.location.protocol + '//connect.facebook.net/en_US/all.js';
-        e.async = true;
-        document.getElementById('fb-root').appendChild(e);
-      }());
-    </script>
-  </body>
-</html>
+{% extends "base.html" %}
+{% block head %}
+<script src='assets/intro.js'></script>
+{% endblock %}
+{% block nav_buttons %}
+<li>
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+        <span class="glyphicon glyphicon-globe" aria-hidden="true"></span>
+    </a>
+    <ul class="dropdown-menu" id='notifications'></ul>
+</li>
+<li>
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+        <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="http://tgt-dev.appspot.com/logout" id="logout">Logout</a></li>
+    </ul>
+</li>
+{% endblock %}
+{% block body %}
+<!-- setings modal -->
+<div class="modal fade" id="settings" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title"> Settings</h4>
+      </div>
+      <div class="modal-body">
+          <form id='settings' action=''>
+              <div class="form-group">
+                  <label for="reminder_days">Reminder Days</label>
+                  <input type='number' name='reminder_days' id='reminder_days'/>
+              </div>
+              <div class="form-group">
+                  <label for="settings_wall">Default Post to FB</label>
+                  <input type='checkbox' name='default_fb' id='settings_wall'/>
+              </div>
+              <div class="form-group">
+                  <label for="settings_public">Default Public</label>
+                  <input type='checkbox' name='default_public' id='settings_public'/>
+              </div>
+          </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" id="save_settings">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="col-md-6 col-sm-8 col-xs-12">
+    <!-- input for posting a good thing -->
+    <div class="panel panel-default" id="my_good_thing">
+        <div class="panel-body">
+            <div class="media post">
+                <div class="media-left">
+                    <a href="{{ current_user.profile_url }}">
+                        <img class="media-object" src="http://graph.facebook.com/{{ current_user.id }}/picture?type=square" alt="...">
+                    </a>
+                </div>
+                <div class="media-body post">
+                    <form id="public_user" action=''>
+                        <label>
+                            <input type="radio" name="public_user" id="public_user" value="public" checked>
+                              Public User
+                        </label>
+                        <label>
+                            <input type="radio" name="public_user" id="public_user" value="private">
+                                Private User
+                        </label>
+                        <button type="submit" class="btn btn-default" id="submit_public_user">Create Account</button>
+                        <button class="btn btn-default" id="assign_public_user">Assign Account</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block profile %}
+<!-- profile sidebar -->
+<div class="col-md-2 col-md-offset-2 col-sm-4 col-xs-12">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <img src="http://graph.facebook.com/{{ current_user.id }}/picture?width=250"" alt="..." class="img-rounded img-responsive">
+        </div>
+    </div>
+</div>
+{% endblock %}

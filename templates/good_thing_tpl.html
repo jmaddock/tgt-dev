@@ -2,7 +2,7 @@
 <script id="good_thing_tpl" type="text/html">
     <li class="list-group-item" id="good_thing">
         <div id='data_container' data-id={{id}} data-user_id={{user_id}} data-type='good_thing'>
-            <a name="{{id}}"></a>
+            <a name="{{id}}" id="{{id}}"></a>
             <div class="media">
                 <div class="media-left">
                     <a href="#">
@@ -59,20 +59,25 @@
 <!-- comment notification template -->
 <script id='comment_notification_tpl' type='text/html'>
     <li>
-        <a href="#{{event_id}}">{{from_user}} commented on your good thing</a>
+        <a id="notification_link" href="#{{event_id}}" data-event_id={{event_id}}>{{from_user}} commented on your good thing</a>
     </li>
 </script>
 
 <!-- cheer notification template -->
 <script id='cheer_notification_tpl' type='text/html'>
     <li>
-        <a href="#{{event_id}}">{{from_user}} cheered your good thing</a>
+        <a id="notification_link" href="#{{event_id}}" data-event_id={{event_id}}">{{from_user}} cheered your good thing</a>
     </li>
 </script>
 
 <!-- mention notification template -->
 <script id='mention_notification_tpl' type='text/html'>
     <li>
-        <a href="#{{event_id}}">{{from_user}} mentioned you in a good thing</a>
+        <a id="notification_link" href="#{{event_id}}" data-event_id={{event_id}}>{{from_user}} mentioned you in a good thing</a>
     </li>
+</script>
+
+<!-- wordcloud word template -->
+<script id='word_cloud_tpl' type='text/html'>
+    <a href="#" rel="{{count}}">{{word}}</a>
 </script>

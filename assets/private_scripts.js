@@ -10,33 +10,20 @@ $(document).on("click","button#save_settings",function(e) {
 // clear form on success
 $(document).on("click","#submit_good_thing",function(e) {
     //console.log($( "#post" ).serialize());
-    var mention_list = JSON.stringify($('#magic_friend_tagging').magicSuggest().getSelection());
-    var data_in = $( "#post" ).serialize() + '&mentions=' + mention_list + '&view=';
+    var data_in = $( "#post" ).serialize() + '&view=';
     console.log(data_in)
     $.post( "/post",data_in)
         .done(function(data){
             $( '#post' ).each(function(){
                 this.reset();
             });
-            $('#magic_friend_tagging').magicSuggest().clear();
             get_posts(data);
             get_stats();
         });
     return false;
 });
 
-// friend tagging with magicsuggest
-$( document ).ready(function() {
-    var friend_ids = JSON.parse(localStorage['friend_ids']);
-    $("input#magic_friend_tagging").magicSuggest({
-        placeholder: "Tag Friends",
-        allowFreeEntries: false,
-        data: friend_ids,
-        displayField: 'name',
-       // valueField: 'id'
-    });
-});
-
+// cheer a post
 $(document).on("click","a#cheer",function(e) {
     var cheer = $(this)
     var url_data = 'good_thing=' + cheer.parents('div#data_container').data('id');
@@ -107,7 +94,7 @@ $(document).on("click","a#comment",function(e) {
 window.onload = function() {
     $( document ).ready(function() {
         // get all posts on page load
-        var view = 'view=all';
+        var view = 'view=me';
         $.post( "/post",view).done(function(data){
             get_posts(data);
         });
@@ -115,35 +102,8 @@ window.onload = function() {
         get_settings();
         // get user stats
         get_stats();
-        // get unread notifications
-        $.get('/notify','').done(function(data) {
-            get_notifications(data);
-        })
     });
 };
-
-// change views
-$( document ).ready(function() {
-    $( "a#view_select" ).click(function( event ) {
-        var data = 'view=' + $(this).data('view');
-        $.post( "/post",data).done(function (data) {
-            $('ul#good_things').empty();
-            get_posts(data);
-        });
-        return false;
-    });
-});
-
-
-// view a user profile
-$(document).on("click","a#profile_link",function(e) {
-    var url_data = 'view=' + $(this).parents('div#data_container').data('user_id');
-    $.post( "/post",url_data).done(function (data) {
-        $('ul#good_things').empty();
-        get_posts(data);
-    });
-    return false;
-});
 
 // render posts from template and json data
 function get_posts(post_list) {
@@ -174,20 +134,6 @@ function get_stats() {
         $('span#progress').text(data.progress + ' Complete');
         $('#good_things_today').text(data.posts_today + ' Good Things Today');
         $('#good_things_total').text(data.posts + ' Total Good Things');
-        $.get('templates/good_thing_tpl.html', function(templates) {
-            $('div#word_cloud').empty();
-            data.word_cloud.forEach(function(data) {
-                var template = $(templates).filter('#word_cloud_tpl').html();
-                $('div#word_cloud').prepend(Mustache.render(template, data));
-            });
-            $.fn.tagcloud.defaults = {
-                size: {start: 14, end: 18, unit: 'pt'},
-                color: {start: '#777', end: '#777'}
-            };
-            $(function () {
-                $('#word_cloud a').tagcloud();
-            });
-        });
     });
 }
 
@@ -201,22 +147,6 @@ function get_settings() {
     return false;
 }
 
-function get_notifications(notification_list) {
-    $.get('templates/good_thing_tpl.html', function(templates) {
-        notification_list.forEach(function(data) {
-            var template;
-            if (data.event_type === 'comment') {
-                template = $(templates).filter('#comment_notification_tpl').html();
-            } else if (data.event_type === 'cheer') {
-                template = $(templates).filter('#cheer_notification_tpl').html();
-            } else if (data.event_type === 'mention') {
-                template = $(templates).filter('#mention_notification_tpl').html();
-            }
-            $('ul#notifications').prepend(Mustache.render(template, data));
-        });
-    });
-}
-
 window.fbAsyncInit = function() {
     FB.init({
         appId      : "997456320282204", // App ID
@@ -226,48 +156,9 @@ window.fbAsyncInit = function() {
         xfbml      : true  // parse XFBML
     });
 
-
     // logout handler
-    $(document).on("click","a#logout",function(e) {
-        logout()
-    });
-
-    // get friend list on login and store for friend tagging
-    FB.getLoginStatus(function(response){
-        var friend_ids = [];
-        var friend_app_ids = {};
-        // get list of friends who use 3gt
-        FB.api("/me/friends",function (response) {
-            if (response && !response.error) {
-                response.data.forEach(function(friend_data) {
-                    friend_app_ids[friend_data.name] = friend_data.id.toString();
-                });
-                console.log(friend_app_ids);
-                // get list of taggable fb friends
-                FB.api("/me/taggable_friends",function (response) {
-                    if (response && !response.error) {
-                        response.data.forEach(function(friend_data) {
-                            friend = {
-                                'name':friend_data.name,
-                                'id':friend_data.id.toString()
-                            };
-                            // if the a taggable friend uses 3gt, store the user id
-                            if (friend_data.name in friend_app_ids) {
-                                console.log(friend_app_ids[friend_data.name]);
-                                friend.app_id = friend_app_ids[friend_data.name];
-                                console.log(friend);
-                            }
-                            friend_ids.push(friend);
-                        });
-                        localStorage['friend_ids'] = JSON.stringify(friend_ids);
-                    } else {
-                        console.log(response.error)
-                    }
-                });
-            } else {
-                console.log(response.error)
-            }
-        });
+    FB.Event.subscribe('auth.logout', function(response) {
+        window.location = "http://tgt-dev.appspot.com/logout";
     });
 };
 
@@ -280,20 +171,9 @@ window.fbAsyncInit = function() {
 }(document));
 
 // logout function
-function logout() {
+$(document).on("click","a#logout",function(e) {
     FB.logout(function(response) {
-        if (response && !response.error) {
-            window.location = "http://tgt-dev.appspot.com/logout";
-        } else {
-            console.log(response.error)
-        }
+        // user is now logged out
     });
-}
-
-// notification click listener
-$(document).on("click","a#notification_link",function(e) {
-    $('html, body').animate({
-        scrollTop: $( $(this).attr('href') ).offset().top
-    }, 500);
-    return false;
+    window.location = "http://tgt-dev.appspot.com/logout";
 });

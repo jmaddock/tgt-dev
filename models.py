@@ -1,4 +1,8 @@
+import json
+import string
+import datetime
 from google.appengine.ext import db
+from collections import Counter,OrderedDict
 
 class Settings(db.Model):
     reminder_days = db.IntegerProperty(default=0)
@@ -13,6 +17,35 @@ class Settings(db.Model):
         }
         return template
 
+class WordCloud(db.Model):
+    word_dict = db.StringProperty(default=None)
+    updated = db.DateTimeProperty(auto_now_add=True)
+    stopwords = db.StringListProperty(default=['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now'])
+
+    def update_word_dict(self):
+        counter = Counter()
+        replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
+        if self.word_dict:
+            counter.update(json.loads(self.word_dict))
+        users = self.user_set.fetch(limit=None)
+        for user in users:
+            good_thing_list = user.goodthing_set.filter('created >=', self.updated).fetch(limit=None)
+            for good_thing in good_thing_list:
+                x = str(good_thing.good_thing).translate(replace_punctuation).lower()
+                words = [word for word in x.split(' ') if word not in self.stopwords]
+                counter.update(words)
+        self.word_dict = json.dumps(counter)
+        self.upated = datetime.datetime.now()
+
+    def get_sorted_word_dict(self):
+        if self.word_dict:
+            word_dict = json.loads(self.word_dict)
+            sorted_dict = OrderedDict(sorted(word_dict.items(), key=lambda t: t[1]))
+            result = [{'word':word,'count':sorted_dict[word]} for word in sorted_dict]
+            return result
+        else:
+            return [{'word':"You haven't posted any good things!",'count':1}]
+
 class User(db.Model):
     id = db.StringProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
@@ -20,8 +53,9 @@ class User(db.Model):
     name = db.StringProperty(required=True)
     profile_url = db.StringProperty(required=True)
     access_token = db.StringProperty(required=True)
-    public_user = db.BooleanProperty(default=True) # change default back to false
+    public_user = db.BooleanProperty(default=None) # change default back to false
     settings = db.ReferenceProperty(Settings,required=True)
+    word_cloud = db.ReferenceProperty(WordCloud,required=True)
 
 class GoodThing(db.Model):
     good_thing = db.StringProperty(required=True)

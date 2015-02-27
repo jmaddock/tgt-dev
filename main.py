@@ -73,16 +73,18 @@ class BaseHandler(webapp2.RequestHandler):
                     profile = graph.get_object("me")
                     settings = models.Settings()
                     settings.put()
+                    word_cloud = models.WordCloud()
+                    word_cloud.put()
                     user = models.User(
                         key_name=str(profile["id"]),
                         id=str(profile["id"]),
                         name=profile["name"],
                         profile_url=profile["link"],
                         access_token=cookie["access_token"],
-                        settings=settings
+                        settings=settings,
+                        word_cloud=word_cloud
                     )
                     user.put()
-                    self.redirect('/intro')
                 elif user.access_token != cookie["access_token"]:
                     user.access_token = cookie["access_token"]
                     user.put()
@@ -140,8 +142,11 @@ class HomeHandler(BaseHandler):
             user = models.User.get_by_key_name(user_id)
             if user.public_user:
                 template = jinja_environment.get_template('public_main.html')
-            else:
+            elif user.public_user is False:
                 template = jinja_environment.get_template('private_main.html')
+            else:
+                self.redirect('/intro')
+                return None
             template_values = {
                 'facebook_app_id':FACEBOOK_APP_ID,
                 'current_user':current_user,
@@ -290,7 +295,7 @@ class CommentHandler(BaseHandler):
             good_thing=good_thing,
         )
         comment.put()
-        event_id = comment.key().id()
+        event_id = good_thing.key().id()
         self.notify(event_type='comment',
                     to_user=good_thing.user,
                     event_id=event_id,)
@@ -320,9 +325,26 @@ class LogoutHandler(BaseHandler):
 
 class IntroHandler(BaseHandler):
     def get(self):
+        current_user = self.current_user
         template = jinja_environment.get_template('intro.html')
-        template_values = {}
+        template_values = {
+                'facebook_app_id':FACEBOOK_APP_ID,
+                'current_user':current_user,
+        }
         self.response.out.write(template.render(template_values))
+
+    def post(self):
+        user_id = str(self.current_user['id'])
+        user = models.User.get_by_key_name(user_id)
+        if self.request.get('public_user') == 'public':
+            user.public_user = True
+        elif self.request.get('public_user') == 'private':
+            user.public_user = False
+        elif self.request.get('public_user') == 'assign':
+            user.public_user = random.choice([True, False])
+        else:
+            user.public_user = None
+        user.put()
 
 class SettingsHandler(BaseHandler):
     def post(self):
@@ -365,10 +387,13 @@ class StatHandler(BaseHandler):
         if progress > 100:
             progress = 100
         progress = str(progress) + '%'
+        user.word_cloud.update_word_dict()
+        word_cloud = user.word_cloud.get_sorted_word_dict()
         result = {
             'posts_today':posts_today,
             'progress':progress,
-            'posts':posts
+            'posts':posts,
+            'word_cloud':word_cloud
         }
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
@@ -377,12 +402,12 @@ class NotificationHandler(BaseHandler):
     def get(self):
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
-        notification_list = models.Notification.all().filter('read =',False)#.filter('to_user =',user)
+        notification_list = models.Notification.all().filter('to_user =',user)#.filter('read =',False)
         result = []
         for notification in notification_list:
             result.append(notification.template())
-            #notification.read = True
-            #notification.put()
+            notification.read = True
+            notification.put()
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
