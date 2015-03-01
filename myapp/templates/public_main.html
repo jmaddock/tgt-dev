@@ -1,10 +1,18 @@
 {% extends "base.html" %}
 {% block head %}
-<link href="assets/magic_suggest/magicsuggest-min.css" rel="stylesheet">
-<script src="assets/magic_suggest/magicsuggest-min.js"></script>
-<script src='assets/private_scripts.js'></script>
+<link href="http://tgt-dev.appspot.com/static/css/magicsuggest-min.css" rel="stylesheet">
+<script src="http://tgt-dev.appspot.com/static/js/magicsuggest-min.js"></script>
+<script src='http://tgt-dev.appspot.com/static/js/jquery.tagcloud.js/jquery.tagcloud.js'></script>
+<script src='http://tgt-dev.appspot.com/static/js/scripts.js'></script>
 {% endblock %}
 {% block nav_buttons %}
+<li>
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+        <span class="glyphicon glyphicon-globe" aria-hidden="true"></span>
+    </a>
+    <ul class="dropdown-menu" id='notifications'>
+    </ul>
+</li>
 <li>
     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
         <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
@@ -29,6 +37,14 @@
               <div class="form-group">
                   <label for="reminder_days">Reminder Days</label>
                   <input type='number' name='reminder_days' id='reminder_days'/>
+              </div>
+              <div class="form-group">
+                  <label for="settings_wall">Default Post to FB</label>
+                  <input type='checkbox' name='default_fb' id='settings_wall'/>
+              </div>
+              <div class="form-group">
+                  <label for="settings_public">Default Public</label>
+                  <input type='checkbox' name='default_public' id='settings_public'/>
               </div>
           </form>
       </div>
@@ -66,6 +82,17 @@
                             <label for="img">Image</label>
                             <input type="file" class="form-control" placeholder='Image' name="img" multiple/>
                         </div>
+                        <!-- tag friends with magicsuggest -->
+                        <div class="form-group">
+                            <label for="twitter_friend_tagging">Tag a Friend</label>
+                            <input id="magic_friend_tagging" class="form-control" type="text" placeholder="Friends" name='mentions'/>
+                        </div>
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="settings_public" name="public"> Make post public on 3GT
+                        </label>
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="settings_wall" name="wall"> Post to your facebook wall
+                        </label>
                         <button type="submit" class="btn btn-default" id="submit_good_thing">Post</button>
                     </form>
                 </div>
@@ -75,6 +102,8 @@
     <!-- list of posted good things -->
     <div class="panel panel-default">
         <div class="panel-heading">
+            <a href='#' id='view_select' data-view='all'>all</a>
+            <a href='#' id='view_select' data-view='me'>my posts</a>
         </div>
         <ul class="list-group" id='good_things'>
         </ul>
@@ -98,6 +127,7 @@
             <h4 class="text-muted" id="good_things_total"></h4>
             <hr>
             <h4>Trending Words</h4>
+            <div id="word_cloud"></div>
         </div>
     </div>
 </div>

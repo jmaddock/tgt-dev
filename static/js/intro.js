@@ -44,7 +44,7 @@ function get_settings() {
 }
 
 function get_notifications(notification_list) {
-    $.get('templates/good_thing_tpl.html', function(templates) {
+    $.get('static/templates/good_thing_tpl.html', function(templates) {
         notification_list.forEach(function(data) {
             var template;
             if (data.event_type === 'comment') {
