@@ -2,7 +2,9 @@
 // generic alert on success
 $(document).on("click","button#save_settings",function(e) {
     console.log($( "form#settings" ).serialize());
-    $.post( "/settings",$( "form#settings" ).serialize()).done(alert('settings updated!'));
+    $.post( "/settings",$( "form#settings" ).serialize()).done(function() {
+        $('#settings_modal').modal('hide');
+    });
     get_settings();
 });
 
@@ -134,6 +136,20 @@ function get_stats() {
         $('span#progress').text(data.progress + ' Complete');
         $('#good_things_today').text(data.posts_today + ' Good Things Today');
         $('#good_things_total').text(data.posts + ' Total Good Things');
+        $.get('static/templates/good_thing_tpl.html', function(templates) {
+            $('div#word_cloud').empty();
+            data.word_cloud.forEach(function(data) {
+                var template = $(templates).filter('#word_cloud_tpl').html();
+                $('div#word_cloud').prepend(Mustache.render(template, data));
+            });
+            $.fn.tagcloud.defaults = {
+                size: {start: 14, end: 18, unit: 'pt'},
+                color: {start: '#777', end: '#777'}
+            };
+            $(function () {
+                $('#word_cloud a').tagcloud();
+            });
+        });
     });
 }
 

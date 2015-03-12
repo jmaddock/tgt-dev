@@ -2,7 +2,7 @@
 {% block head %}
 <link href="http://tgt-dev.appspot.com/static/css/magicsuggest-min.css" rel="stylesheet">
 <script src="http://tgt-dev.appspot.com/static/js/magicsuggest-min.js"></script>
-<script src='http://tgt-dev.appspot.com/static/js/jquery.tagcloud.js/jquery.tagcloud.js'></script>
+<script src='http://tgt-dev.appspot.com/static/js/jquery.tagcloud.js'></script>
 <script src='http://tgt-dev.appspot.com/static/js/scripts.js'></script>
 {% endblock %}
 {% block nav_buttons %}
@@ -18,7 +18,7 @@
         <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
     </a>
     <ul class="dropdown-menu">
-        <li><a href="#" data-toggle="modal" data-target="#settings">Account Settings</a></li>
+        <li><a href="#" data-toggle="modal" data-target="#settings_modal">Account Settings</a></li>
         <li class="divider"></li>
         <li><a href="http://tgt-dev.appspot.com/logout" id="logout">Logout</a></li>
     </ul>
@@ -26,7 +26,7 @@
 {% endblock %}
 {% block body %}
 <!-- setings modal -->
-<div class="modal fade" id="settings" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="settings_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -35,16 +35,16 @@
       <div class="modal-body">
           <form id='settings' action=''>
               <div class="form-group">
-                  <label for="reminder_days">Reminder Days</label>
+                  <input type="radio" name="send_reminders_true" id="send_reminders_true" value="send_reminders_true"><label>Send me a reminder email if I have not posted for
                   <input type='number' name='reminder_days' id='reminder_days'/>
+                  days.</label>
+                  <input type="radio" name="send_reminders_false" id="send_reminders_false" value="send_reminders_false">
+                  <label>Don't send me reminder emails</label>
               </div>
+              <hr>
               <div class="form-group">
-                  <label for="settings_wall">Default Post to FB</label>
-                  <input type='checkbox' name='default_fb' id='settings_wall'/>
-              </div>
-              <div class="form-group">
-                  <label for="settings_public">Default Public</label>
-                  <input type='checkbox' name='default_public' id='settings_public'/>
+                  <label for="settings_wall"><input type='checkbox' name='default_fb' id='settings_wall'/> Post my Good Things to Facebook by default</label>
+                  <label for="settings_public"><input type='checkbox' name='default_public' id='settings_public'/> Make my Good Things visible to other 3GT users by default</label>
               </div>
           </form>
       </div>
@@ -70,17 +70,17 @@
                         <!-- the good thing -->
                         <div class="form-group">
                             <label for="good_thing">Good Thing</label>
-                            <input type="text" class="form-control" placeholder='Good Thing' name="good_thing">
+                            <input type="text" class="form-control" placeholder='Good Thing' name="good_thing" id="good_thing">
                         </div>
                         <!-- the reason -->
                         <div class="form-group">
                             <label for="reason">Reason</label>
-                            <input type="text" class="form-control" placeholder='Reason' name="reason"/>
+                            <input type="text" class="form-control" placeholder='Reason' name="reason" id="reason"/>
                         </div>
                         <!-- upload and image -->
                         <div class="form-group">
                             <label for="img">Image</label>
-                            <input type="file" class="form-control" placeholder='Image' name="img" multiple/>
+                            <input type="file" class="form-control" placeholder='Image' name="img" multiple id="img"/>
                         </div>
                         <!-- tag friends with magicsuggest -->
                         <div class="form-group">
@@ -126,7 +126,7 @@
             <h4 class="text-muted" id="good_things_today"></h4>
             <h4 class="text-muted" id="good_things_total"></h4>
             <hr>
-            <h4>Trending Words</h4>
+            <h4>My Words Tags</h4>
             <div id="word_cloud"></div>
         </div>
     </div>

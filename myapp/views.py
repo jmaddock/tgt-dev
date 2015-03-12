@@ -14,9 +14,6 @@ from webapp2_extras import sessions
 FACEBOOK_APP_ID = app_config.FACEBOOK_APP_ID
 FACEBOOK_APP_SECRET = app_config.FACEBOOK_APP_SECRET
 
-config = {}
-config['webapp2_extras.sessions'] = app_config.CONFIG
-
 class BaseHandler(webapp2.RequestHandler):
     """Provides access to the active Facebook user in self.current_user
     The property is lazy-loaded on first access, using the cookie saved
@@ -323,9 +320,12 @@ class SettingsHandler(BaseHandler):
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
         settings = user.settings
-        reminder_days = self.request.get('reminder_days')
-        if reminder_days != '':
-            settings.reminder_days = int(reminder_days)
+        if self.request.get('reminder_days_true') == 'on':
+            reminder_days = self.request.get('reminder_days')
+            if reminder_days != '':
+                settings.reminder_days = int(reminder_days)
+        else:
+            settings.reminder_days = -1
         if self.request.get('default_fb') == 'on':
             settings.default_fb = True
         else:
@@ -374,7 +374,7 @@ class NotificationHandler(BaseHandler):
     def get(self):
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
-        notification_list = models.Notification.all().filter('to_user =',user)#.filter('read =',False)
+        notification_list = models.Notification.all().filter('to_user =',user).filter('read =',False)
         result = []
         for notification in notification_list:
             result.append(notification.template())
@@ -385,7 +385,7 @@ class NotificationHandler(BaseHandler):
         self.response.out.write(json.dumps(result))
 
 jinja_environment = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(dirname(__file__),'/templates/')
+    loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__),'templates')),
     autoescape=True,
     extensions=['jinja2.ext.autoescape'],
 )

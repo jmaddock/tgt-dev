@@ -7,7 +7,7 @@ from collections import Counter,OrderedDict
 class Settings(db.Model):
     reminder_days = db.IntegerProperty(default=0)
     default_fb = db.BooleanProperty(default=False)
-    default_public = db.BooleanProperty(default=False)
+    default_public = db.BooleanProperty(default=True)
 
     def template(self):
         template = {
@@ -41,7 +41,8 @@ class WordCloud(db.Model):
         if self.word_dict:
             word_dict = json.loads(self.word_dict)
             sorted_dict = OrderedDict(sorted(word_dict.items(), key=lambda t: t[1]))
-            result = [{'word':word,'count':sorted_dict[word]} for word in sorted_dict]
+            result = [{'word':word,'count':sorted_dict[word]} for word in sorted_dict][-20:]
+            print result
             return result
         else:
             return [{'word':"You haven't posted any good things!",'count':1}]
