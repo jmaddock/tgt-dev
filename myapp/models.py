@@ -4,6 +4,8 @@ import datetime
 from google.appengine.ext import db
 from collections import Counter,OrderedDict
 
+# model for user's settings
+# TODO: fix timezone issue
 class Settings(db.Model):
     reminder_days = db.IntegerProperty(default=0)
     default_fb = db.BooleanProperty(default=False)
@@ -17,11 +19,15 @@ class Settings(db.Model):
         }
         return template
 
+# model for a user's wordcloud. stores a json representation of a counter object
+# and most recent update time
 class WordCloud(db.Model):
-    word_dict = db.StringProperty(default=None)
+    word_dict = db.TextProperty(default=None)
     updated = db.DateTimeProperty(auto_now_add=True)
     stopwords = db.StringListProperty(default=['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now'])
 
+    # update the word counter.  only load posts since last update time
+    # store the counter as json and change the last updated time
     def update_word_dict(self):
         counter = Counter()
         replace_punctuation = string.maketrans(string.punctuation, ' '*len(string.punctuation))
@@ -37,6 +43,7 @@ class WordCloud(db.Model):
         self.word_dict = json.dumps(counter)
         self.upated = datetime.datetime.now()
 
+    # return the 20 most common words as a sorted list of dictionaries
     def get_sorted_word_dict(self):
         if self.word_dict:
             word_dict = json.loads(self.word_dict)
@@ -47,6 +54,8 @@ class WordCloud(db.Model):
         else:
             return [{'word':"You haven't posted any good things!",'count':1}]
 
+# model for each user based on facebook login information
+# TODO: add email field
 class User(db.Model):
     id = db.StringProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
@@ -58,17 +67,16 @@ class User(db.Model):
     settings = db.ReferenceProperty(Settings,required=True)
     word_cloud = db.ReferenceProperty(WordCloud,required=True)
 
+# model for each good thing
+# TODO: update to work with images
 class GoodThing(db.Model):
     good_thing = db.StringProperty(required=True)
     reason = db.StringProperty(default=None)
     created = db.DateTimeProperty(auto_now_add=True)
     user = db.ReferenceProperty(User,required=True)
-    #mentions = db.StringListProperty()
     public = db.BooleanProperty(default=True)
     wall = db.BooleanProperty(default=False)
-    #fbid = models.CharField(max_length=100,blank=True,default=None,editable=False)
     deleted = db.BooleanProperty(default=False)
-    #cheers = db.IntegerProperty(default=0)
     img = db.BlobProperty()
 
     def template(self,user_id):
@@ -93,6 +101,8 @@ class GoodThing(db.Model):
         }
         return template
 
+    # return a list of cheers associated with this good thing
+    # if no cheers, return None
     def get_cheers(self):
         cheers = self.cheer_set.fetch(limit=None)
         if cheers:
@@ -101,6 +111,8 @@ class GoodThing(db.Model):
             result = None
         return result
 
+    # return true if the fb user id has cheered this good thing
+    # else return false
     def cheered(self,user_id):
         user = User.get_by_key_name(user_id)
         cheer = self.cheer_set.filter('user =',user).get()
@@ -110,11 +122,13 @@ class GoodThing(db.Model):
             cheered = False
         return cheered
 
+    # return a list of user names mentioned in this good thing
     def get_mentions(self):
         mentions = self.mention_set.fetch(limit=None)
         result = [{'name':mention.to_user_name} for mention in mentions]
         return result
 
+    # return the number of mentions
     def num_mentions(self):
         count = self.mention_set.count()
         if count > 0:
@@ -126,14 +140,17 @@ class GoodThing(db.Model):
     def num_cheers(self):
         return self.cheer_set.count()
 
+    # return the number of comments
     def num_comments(self):
         return self.comment_set.filter('deleted =',False).count()
 
+# model for a cheer associated with a good thing
 class Cheer(db.Model):
     user = db.ReferenceProperty(User,required=True)
     good_thing = db.ReferenceProperty(GoodThing,required=True)
     created = db.DateTimeProperty(auto_now_add=True)
 
+# model for a comment associated with a good thing
 class Comment(db.Model):
     comment_text = db.StringProperty(required=True)
     user = db.ReferenceProperty(User,required=True)
@@ -156,6 +173,8 @@ class Comment(db.Model):
         }
         return template
 
+# model for a mention associated with a good thing and a user's fb friend
+# associates with to_user model if the user is a 3GT user
 class Mention(db.Model):
     to_fb_user_id = db.StringProperty(required=True)
     to_user_name = db.StringProperty(required=True)
@@ -163,6 +182,7 @@ class Mention(db.Model):
     good_thing = db.ReferenceProperty(GoodThing,required=True)
     created = db.DateTimeProperty(auto_now_add=True)
 
+# model for a notification (cheer, comment, mention)
 class Notification(db.Model):
     from_user = db.ReferenceProperty(User,required=True, collection_name='from_user_set')
     to_user = db.ReferenceProperty(User,required=True,collection_name='to_user_set')

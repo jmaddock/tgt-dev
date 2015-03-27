@@ -32,3 +32,10 @@ indexes:
   - name: good_thing
   - name: created
     direction: desc
+
+- kind: GoodThing
+  properties:
+  - name: deleted
+  - name: public
+  - name: user
+  - name: created

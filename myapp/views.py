@@ -14,6 +14,8 @@ from webapp2_extras import sessions
 FACEBOOK_APP_ID = app_config.FACEBOOK_APP_ID
 FACEBOOK_APP_SECRET = app_config.FACEBOOK_APP_SECRET
 
+# base handler that always checks to make sure the user is signed in and caches
+# user information
 class BaseHandler(webapp2.RequestHandler):
     """Provides access to the active Facebook user in self.current_user
     The property is lazy-loaded on first access, using the cookie saved
@@ -90,6 +92,9 @@ class BaseHandler(webapp2.RequestHandler):
         """
         return self.session_store.get_session()
 
+    # creates a notification any time the current user cheers, comments, or
+    # mentions
+    # TODO: don't create notifications for current user
     def notify(self,event_type,to_user,event_id):
         from_user_id = str(self.current_user['id'])
         from_user = models.User.get_by_key_name(from_user_id)
@@ -103,7 +108,10 @@ class BaseHandler(webapp2.RequestHandler):
             notification.put()
         return from_user != to_user
 
+# handler for home pages
 class HomeHandler(BaseHandler):
+    # check if user if user is logged in and public/private
+    # serve landing page, public home page, or private home page
     def get(self):
         current_user = self.current_user
         if current_user:
@@ -127,29 +135,38 @@ class HomeHandler(BaseHandler):
             }
         self.response.out.write(template.render(template_values))
 
+# API for saving and serving posts
 class PostHandler(BaseHandler):
+    # this should be turned into a get() method just for serving posts
     def post(self):
         user_id = str(self.current_user['id'])
         view = self.request.get('view')
+        # if the client isn't saving a post
         if view != '':
             good_things = models.GoodThing.all().order('created').filter('deleted =',False)
+            # return just the current user's posts
             if view == 'me':
                 user = models.User.get_by_key_name(user_id)
                 good_things.filter('user =',user)
                 result = [x.template(user_id) for x in good_things]
+            # return all public posts and current user's private posts
             elif view == 'all':
                 user = models.User.get_by_key_name(user_id)
                 result = [x.template(user_id) for x in good_things if (x.public or x.user.id == user.id)]
+            # return a specified user's public posts
             else:
-                user_id = str(self.request.get('view'))
-                user = models.User.get_by_key_name(user_id)
-                good_things.filter('user =',user).filter('wall =',True)
+                profile_user_id = str(self.request.get('view'))
+                profile_user = models.User.get_by_key_name(profile_user_id)
+                good_things.filter('user =',profile_user).filter('public =',True)
                 result = [x.template(user_id) for x in good_things]
+        # save a post.  separate this into the post() method
         else:
             result = [self.save_post().template(user_id)]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
 
+    # save a post to the datastore and return that post.  this should be turned
+    # into the post() method
     def save_post(self):
         good_thing_text = self.request.get('good_thing')
         reason = self.request.get('reason')
@@ -212,6 +229,7 @@ class PostHandler(BaseHandler):
                 graph.put_object('me','feed',message=good_thing)
         return good_thing
 
+# API for saving and serving cheers
 class CheerHandler(BaseHandler):
     def post(self):
         user_id = str(self.current_user['id'])
@@ -219,6 +237,7 @@ class CheerHandler(BaseHandler):
         good_thing_id = long(self.request.get('good_thing'))
         good_thing = models.GoodThing.get_by_id(good_thing_id)
         cheer = good_thing.cheer_set.filter('user =',user).get()
+        # if the user has not cheered this post, create a new cheer
         if not cheer:
             cheer = models.Cheer(
                 user=user,
@@ -230,6 +249,7 @@ class CheerHandler(BaseHandler):
             self.notify(event_type='cheer',
                         to_user=good_thing.user,
                         event_id=good_thing_id)
+        # if the user has already cheered this post, delete the cheer
         else:
             cheer.delete()
             cheered = False
@@ -240,23 +260,28 @@ class CheerHandler(BaseHandler):
         }
         self.response.out.write(json.dumps(result))
 
+# API for saving and serving comments.  should be separated like good thing handler
 class CommentHandler(BaseHandler):
     def post(self):
         comment_text = self.request.get('comment_text')
         good_thing_id = long(self.request.get('good_thing'))
         good_thing = models.GoodThing.get_by_id(good_thing_id)
         user_id = str(self.current_user['id'])
+        # if the client is trying to save a comment, create a new comment, save
+        # to the datastore and return the comment
         if comment_text != '':
             user = models.User.get_by_key_name(user_id)
             result = [self.save_comment(comment_text=comment_text,
                                         user=user,
                                         good_thing=good_thing).template(user_id)]
+        # return all comments associated with a good thing
         else:
             comments = good_thing.comment_set.order('-created').filter('deleted =',False).fetch(limit=None)
             result = [x.template(user_id) for x in comments]
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
 
+    # save a comment to the datastore
     def save_comment(self, comment_text, user, good_thing):
         comment = models.Comment(
             comment_text=comment_text,
@@ -270,6 +295,7 @@ class CommentHandler(BaseHandler):
                     event_id=event_id,)
         return comment
 
+# API for deleting a good thing or a comment
 class DeleteHandler(BaseHandler):
     def post(self):
         obj_id = long(self.request.get('id'))
@@ -285,6 +311,7 @@ class DeleteHandler(BaseHandler):
             self.response.headers['Content-Type'] = 'application/json'
             self.response.out.write(json.dumps(result))
 
+# log the current user out and redirect to the landing page
 class LogoutHandler(BaseHandler):
     def get(self):
         if self.current_user is not None:
@@ -292,7 +319,9 @@ class LogoutHandler(BaseHandler):
 
         self.redirect('/')
 
+# intro page for first time users
 class IntroHandler(BaseHandler):
+    # serve the intro page
     def get(self):
         current_user = self.current_user
         template = jinja_environment.get_template('intro.html')
@@ -302,20 +331,30 @@ class IntroHandler(BaseHandler):
         }
         self.response.out.write(template.render(template_values))
 
+    # update the public/private field after the user has passed through the intro
+    # screen.
     def post(self):
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
+        # public version of the app
         if self.request.get('public_user') == 'public':
             user.public_user = True
+        # private version of the app
         elif self.request.get('public_user') == 'private':
             user.public_user = False
+        # randomly assign the user to the public or the private version
         elif self.request.get('public_user') == 'assign':
             user.public_user = random.choice([True, False])
+        # if the user doesn't choose an option, don't assign a public/private
+        # value.  app will redirect to this handler before allowing user to
+        # view the home page
         else:
             user.public_user = None
         user.put()
 
+# API for updating a user's settings
 class SettingsHandler(BaseHandler):
+    # update the current user's settings
     def post(self):
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
@@ -336,6 +375,7 @@ class SettingsHandler(BaseHandler):
             settings.default_public = False
         settings.put()
 
+    # get the current user's settings
     def get(self):
         user_id = str(self.current_user['id'])
         user = models.User.get_by_key_name(user_id)
@@ -343,15 +383,22 @@ class SettingsHandler(BaseHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
 
+# serve the privacy page
 class PrivacyHandler(webapp2.RequestHandler):
     def get(self):
         template = jinja_environment.get_template('privacy.html')
         template_values = {}
         self.response.out.write(template.render(template_values))
 
+# API for getting a user's stats (word cloud, good things today).  can be used
+# any public user, not just current user
 class StatHandler(BaseHandler):
     def post(self):
-        user_id = str(self.current_user['id'])
+        print self.request.get('user_id')
+        if self.request.get('user_id') == '':
+            user_id = str(self.current_user['id'])
+        else:
+            user_id = self.request.get('user_id')
         user = models.User.get_by_key_name(user_id)
         posts = user.goodthing_set.filter('deleted =',False).count()
         posts_today = user.goodthing_set.filter('created >=',datetime.date.today()).filter('deleted =',False).count()
@@ -370,6 +417,8 @@ class StatHandler(BaseHandler):
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
 
+# API for getting all of the current user's unread notifications
+# after this API has been called once all notifications are marked as read
 class NotificationHandler(BaseHandler):
     def get(self):
         user_id = str(self.current_user['id'])
@@ -383,6 +432,19 @@ class NotificationHandler(BaseHandler):
 
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(json.dumps(result))
+
+# serve the profile page for a public user
+class ProfileHandler(BaseHandler):
+    def get(self, user_id):
+        user = models.User.get_by_key_name(user_id)
+        if user.public_user:
+            template = jinja_environment.get_template('profile.html')
+            template_values = {
+                'facebook_app_id':FACEBOOK_APP_ID,
+                'user_id':user_id,
+                'user_name':user.name
+            }
+        self.response.out.write(template.render(template_values))
 
 jinja_environment = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.join(os.path.dirname(__file__),'templates')),

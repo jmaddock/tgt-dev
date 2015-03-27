@@ -137,14 +137,14 @@ $( document ).ready(function() {
 
 
 // view a user profile
-$(document).on("click","a#profile_link",function(e) {
+/*$(document).on("click","a#profile_link",function(e) {
     var url_data = 'view=' + $(this).parents('div#data_container').data('user_id');
     $.post( "/post",url_data).done(function (data) {
         $('ul#good_things').empty();
         get_posts(data);
     });
     return false;
-});
+});*/
 
 // render posts from template and json data
 function get_posts(post_list) {
@@ -225,7 +225,7 @@ function get_notifications(notification_list) {
             });
         } else {
             var template = $(templates).filter('#blank_notification_tpl').html();
-            $('ul#notifications').prepend(Mustache.render(template, data));
+            $('ul#notifications').prepend(Mustache.render(template));
         }
     });
 }
