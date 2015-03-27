@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block head %}
+<link href="http://tgt-dev.appspot.com/static/css/magicsuggest-min.css" rel="stylesheet">
+<script src="http://tgt-dev.appspot.com/static/js/magicsuggest-min.js"></script>
+<script src='http://tgt-dev.appspot.com/static/js/jquery.tagcloud.js'></script>
+<script src='http://tgt-dev.appspot.com/static/js/profile.js'></script>
+{% endblock %}
+{% block nav_buttons %}
+<li>
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+        <span class="glyphicon glyphicon-globe" aria-hidden="true"></span>
+    </a>
+    <ul class="dropdown-menu" id='notifications'>
+    </ul>
+</li>
+<li>
+    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+        <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+    </a>
+    <ul class="dropdown-menu">
+        <li><a href="#" data-toggle="modal" data-target="#settings_modal">Account Settings</a></li>
+        <li class="divider"></li>
+        <li><a href="http://tgt-dev.appspot.com/logout" id="logout">Logout</a></li>
+    </ul>
+</li>
+{% endblock %}
+{% block body %}
+<!-- setings modal -->
+<div class="modal fade" id="settings_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title"> Settings</h4>
+      </div>
+      <div class="modal-body">
+          <form id='settings' action=''>
+              <div class="form-group">
+                  <input type="radio" name="send_reminders_true" id="send_reminders_true" value="send_reminders_true"><label>Send me a reminder email if I have not posted for
+                  <input type='number' name='reminder_days' id='reminder_days'/>
+                  days.</label>
+                  <input type="radio" name="send_reminders_false" id="send_reminders_false" value="send_reminders_false">
+                  <label>Don't send me reminder emails</label>
+              </div>
+              <hr>
+              <div class="form-group">
+                  <label for="settings_wall"><input type='checkbox' name='default_fb' id='settings_wall'/> Post my Good Things to Facebook by default</label>
+                  <label for="settings_public"><input type='checkbox' name='default_public' id='settings_public'/> Make my Good Things visible to other 3GT users by default</label>
+              </div>
+          </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-default" id="save_settings">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="col-md-6 col-sm-8 col-xs-12">
+    <!-- list of posted good things -->
+    <div class="panel panel-default">
+        <div class="panel-heading">
+        </div>
+        <ul class="list-group" id='good_things'>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block profile %}
+<!-- profile sidebar -->
+<div class="col-md-2 col-md-offset-2 col-sm-4 col-xs-12">
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <img src="http://graph.facebook.com/{{ user_id }}/picture?width=250"" alt="..." class="img-rounded img-responsive">
+            <hr>
+            <h4 class="text-muted" id="good_things_today"></h4>
+            <h4 class="text-muted" id="good_things_total"></h4>
+            <hr>
+            <h4>{{user_name}}'s Words Tags</h4>
+            <div id="word_cloud"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
